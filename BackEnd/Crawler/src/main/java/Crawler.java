@@ -10,6 +10,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Crawler {
     final static Logger logger = LoggerFactory.getLogger(Crawler.class);
@@ -17,13 +19,35 @@ public class Crawler {
     public static JSONArray getEventsInfo(Document document){
         JSONArray eventsInfo = new JSONArray();
         try {
-            Elements events = document.getElementsByClass("list-group");
-            for (Element element : events.get(0).children()) {
+            Elements events = document.getElementById("events").getElementsByTag("li");
+
+            for(Element event: events){
+                String eventLink = event.getElementsByTag("a").attr("href");
+                String eventName = event.getElementsByTag("a").text();
+
+                Document descriptionDocument = Jsoup.connect(eventLink).get();
+
+                Element eventDateAndTime = descriptionDocument.getElementById("detail_left");
+                String eventDate = eventDateAndTime.getElementsByClass("date").first().text();
+                String eventTime = eventDateAndTime.getElementsByTag("time").first().text();
+
+                Element descriptionAndLocation = descriptionDocument.getElementById("evernote");
+                String eventDescription = descriptionAndLocation.getElementsByTag("p").first().text();
+                String eventLocation = descriptionAndLocation.getElementById("location").text();
+
+                List<String> eventCategories = new ArrayList<String>();
+                Element category = descriptionDocument.getElementById("categories");
+                for(Element c: category.getElementsByTag("a")){
+                    eventCategories.add(c.text());
+                }
+
                 JSONObject eventInfo = new JSONObject();
-                eventInfo.put("EventName", element.getElementsByTag("a").last().text());
-                eventInfo.put("EventDate",element.getElementsByClass("timeDate").text());
-                eventInfo.put("EventLocation", element.getElementsByClass("location").text());
-                eventInfo.put("EventLink", element.getElementsByTag("a").last().attr("href"));
+                eventInfo.put("EventName", eventName);
+                eventInfo.put("EventDate", eventDate);
+                eventInfo.put("EventTime", eventTime);
+                eventInfo.put("EventLocation", eventLocation);
+                eventInfo.put("EventDescription", eventDescription);
+                eventInfo.put("EventCategory", eventCategories.toString());
                 eventsInfo.add(eventInfo);
             }
         }
@@ -52,7 +76,7 @@ public class Crawler {
 
     public static void main(String[] args) {
         try{
-            String url = "https://careers.usc.edu/alumni/info/events";
+            String url = "https://careers.usc.edu/eventcalendar/";
             String outputFilePath = "data/output/eventsInfo.json";
 
             Document document = Jsoup.connect(url).get();
