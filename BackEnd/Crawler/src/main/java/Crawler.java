@@ -29,7 +29,9 @@ public class Crawler {
 
                 Element eventDateAndTime = descriptionDocument.getElementById("detail_left");
                 String eventDate = eventDateAndTime.getElementsByClass("date").first().text();
-                String eventTime = eventDateAndTime.getElementsByTag("time").first().text();
+                String[] eventTimes = eventDateAndTime.getElementsByTag("time").first().text().split("-");
+                String eventStartTime = eventTimes[0].trim();
+                String eventEndTime = (eventTimes.length==2)?eventTimes[1].trim():"NA";
 
                 Element descriptionAndLocation = descriptionDocument.getElementById("evernote");
                 String eventDescription = descriptionAndLocation.getElementsByTag("p").first().text();
@@ -44,7 +46,8 @@ public class Crawler {
                 JSONObject eventInfo = new JSONObject();
                 eventInfo.put("EventName", eventName);
                 eventInfo.put("EventDate", eventDate);
-                eventInfo.put("EventTime", eventTime);
+                eventInfo.put("EventStartTime", eventStartTime);
+                eventInfo.put("EventEndTime", eventEndTime);
                 eventInfo.put("EventLocation", eventLocation);
                 eventInfo.put("EventDescription", eventDescription);
                 eventInfo.put("EventCategory", eventCategories.toString());
