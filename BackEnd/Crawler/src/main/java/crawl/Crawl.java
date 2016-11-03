@@ -41,25 +41,31 @@ public class Crawl {
                 String eventDate = eventDateAndTime.getElementsByClass("date").first().text();
                 String[] eventTimes = eventDateAndTime.getElementsByTag("time").first().text().split("-");
                 String eventStartTime = eventTimes[0].trim();
+                if(!eventStartTime.contains("AM") && !eventStartTime.contains("PM")){
+                    eventStartTime = "12:00 AM";
+                }
                 String eventEndTime = (eventTimes.length==2)?eventTimes[1].trim():"NA";
+                if(!eventEndTime.contains("AM") && !eventEndTime.contains("PM")){
+                    eventEndTime = "11:00 PM";
+                }
 
                 Element descriptionAndLocation = descriptionDocument.getElementById("evernote");
                 String eventDescription = descriptionAndLocation.getElementsByTag("p").first().text();
                 String eventLocation = descriptionAndLocation.getElementById("location").text();
 
-                List<String> eventCategories = new ArrayList<String>();
+                List<String> eventCategories = new ArrayList();
                 Element category = descriptionDocument.getElementById("categories");
                 for(Element c: category.getElementsByTag("a")){
                     eventCategories.add(c.text());
                 }
 
                 JSONObject eventInfo = new JSONObject();
-                eventInfo.put("name", eventName);
+                eventInfo.put("name", eventName.replaceAll("'", "''"));
                 eventInfo.put("date", eventDate);
                 eventInfo.put("startTime", eventStartTime);
                 eventInfo.put("endTime", eventEndTime);
                 eventInfo.put("address", eventLocation);
-                eventInfo.put("description", eventDescription);
+                eventInfo.put("description", eventDescription.replaceAll("'", "''"));
                 eventInfo.put("category", eventCategories.toString());
                 eventsInfo.add(eventInfo);
             }

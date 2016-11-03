@@ -1,4 +1,3 @@
-import crawl.Crawl;
 import database.AmazonRDS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,16 +9,13 @@ public class Crawler {
 
     public static void main(String[] args) {
         try {
-            Crawl crawlUSC = new Crawl();
+            // to crawl events and write eventsinfo to file
+            //Crawl crawlUSC = new Crawl();
+            // crawlUSC.crawlAndWriteToFile("Events");
+
+            // write events into from file to AWS DATABASE
             AmazonRDS amazonRDS = new AmazonRDS(Constants.host, Constants.dataBaseName, Constants.username, Constants.password, Constants.port);
-
-            // to crawl events and write eventsinfo from file to EVENT table
-            crawlUSC.crawlAndWriteToFile("Events");
-            //amazonRDS.writeToEventTable();
-
-            // to crawl usc locations and write locationinfo from file to LOCATION table
-            crawlUSC.crawlAndWriteToFile("Building");
-            //amazonRDS.writeToLocationTable();
+            amazonRDS.writeToEventTable();
         }
         catch (Exception ex){
             logger.error(ex.getStackTrace().toString());

@@ -10,11 +10,13 @@ import table.Location;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 public class AmazonRDS {
 
@@ -27,10 +29,6 @@ public class AmazonRDS {
     private String password;
 
     private int port;
-
-    Connection connection = null;
-
-    Statement statement = null;
 
     final static Logger logger = LoggerFactory.getLogger(AmazonRDS.class);
 
@@ -65,8 +63,10 @@ public class AmazonRDS {
     }
 
     public HashMap<String, Integer> getLoginAndUserID(String userName) throws Exception{
+        Connection connection = null;
         HashMap<String, Integer> loginAndUserID = new HashMap();
         ResultSet resultSet;
+
         try{
             int uscLoginID = -1;
             int uscUserID = -1;
@@ -74,7 +74,7 @@ public class AmazonRDS {
             String insertUscLogin = "INSERT INTO LOGIN (USERNAME, PASSWORD) VALUES( \'" + userName + "\', 'password')";
 
             connection = getConnection();
-            statement = connection.createStatement();
+            Statement statement = connection.createStatement();
 
             // get LOGINID
             resultSet = statement.executeQuery(selectLoginID);
@@ -113,9 +113,10 @@ public class AmazonRDS {
     }
 
     public void writeToLocationTable() throws Exception{
+        Connection connection = null;
         try{
             connection = getConnection();
-            statement = connection.createStatement();
+            Statement statement = connection.createStatement();
 
             Crawl crawl = new Crawl();
             List<UscLocation> uscLocationList = crawl.getUscLocationsInfo();
@@ -124,7 +125,7 @@ public class AmazonRDS {
             Location location = new Location();
             while (uscLocationIterator.hasNext()){
                 uscLocation = uscLocationIterator.next();
-                location.getLocationCoOrdinates(uscLocation.getAddress());
+                location.setLocationCoOrdinates(uscLocation.getAddress());
                 StringBuffer insertQuery = new StringBuffer();
                 insertQuery.append("INSERT INTO LOCATION (ADDRESS, LATITUDE, LONGITUDE) VALUES(");
                 insertQuery.append("'" + location.getAddress() + "'");
@@ -147,6 +148,7 @@ public class AmazonRDS {
     }
 
     public void writeToEventTable() throws Exception{
+        Connection connection = null;
         try{
             HashMap<String, Integer> loginAndUserID = getLoginAndUserID("usc");
             Crawl crawlUSC = new Crawl();
@@ -154,17 +156,85 @@ public class AmazonRDS {
             Iterator<Event> eventIterator = eventList.iterator();
             Location location = new Location();
             Event event;
+
+            connection = getConnection();
+            Statement statement = connection.createStatement();
+            StringBuffer insertQuery = new StringBuffer();
             while(eventIterator.hasNext()){
                 event = eventIterator.next();
-                location.getLocationCoOrdinates(event.getAddress());
-
+                location.setLocationCoOrdinates(event.getAddress());
+                int locationID = getLocationID(location);
+                insertQuery.append("INSERT INTO EVENT (EVENTNAME, EVENTDESCRIPTION, EVENTDATE, STARTTIME, ENDTIME, LOCATIONID, CREATOR) VALUES(");
+                insertQuery.append("'" + event.getName() + "'" + ",");
+                insertQuery.append("'" + event.getDescription() + "'" + ",");
+                insertQuery.append("'" + formatDate(event.getDate()) + "'" + ","); // find how to insert date and time
+                insertQuery.append("'" + event.getStartTime() + "'" + ",");
+                insertQuery.append("'" + event.getEndTime() + "'" + ",");
+                insertQuery.append("'" + locationID + "'" + ","); // add location ID here
+                insertQuery.append(loginAndUserID.get("USERID"));
+                insertQuery.append(")");
+                statement.executeUpdate(insertQuery.toString());
+                insertQuery.setLength(0);
             }
-        }
-        catch(SQLException ex){
-            logger.error(ex.getMessage());
-        }
-        finally {
+            connection.commit();
+            statement.close();
             connection.close();
         }
+        catch (Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
+    }
+
+    public String formatDate(String stringDate) throws Exception{
+        DateFormat df = new SimpleDateFormat("EEE, dd MMM, yyyy", Locale.US);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MMM-dd", Locale.ENGLISH);
+
+        String result =  formatter.format(df.parse(stringDate));
+        return result;
+    }
+
+    public int getLocationID(Location location) throws Exception{
+        Connection connection = null;
+        int locationID = -1;
+        try {
+            connection = getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet;
+
+            String getLocationIDQuery = "SELECT locationid FROM LOCATION WHERE latitude=" + location.getLatitude() + " AND " + "longitude=" + location.getLongitude();
+            resultSet = statement.executeQuery(getLocationIDQuery);
+            if(resultSet.next()) {
+                locationID = Integer.parseInt(resultSet.getString("locationid"));
+            }
+            else{
+                StringBuffer insertQuery = new StringBuffer();
+                insertQuery.append("INSERT INTO LOCATION (ADDRESS, LATITUDE, LONGITUDE) VALUES(");
+                insertQuery.append("'" + location.getAddress() + "'");
+                insertQuery.append("," + location.getLatitude());
+                insertQuery.append("," + location.getLongitude());
+                insertQuery.append(")");
+                statement.executeUpdate(insertQuery.toString());
+                getLocationIDQuery = "SELECT locationid FROM LOCATION WHERE latitude=" + location.getLatitude() + " AND " + "longitude=" + location.getLongitude();
+                resultSet = statement.executeQuery(getLocationIDQuery);
+                if(resultSet.next()) {
+                    locationID = Integer.parseInt(resultSet.getString("locationid"));
+                }
+            }
+            connection.commit();
+            statement.close();
+            connection.close();
+        }
+        catch(Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
+        return locationID;
     }
 }

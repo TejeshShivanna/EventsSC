@@ -22,27 +22,15 @@ public class Location {
         return address;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
     public Double getLatitude() {
         return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
     }
 
     public Double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-
-    public void getLocationCoOrdinates(String address) throws Exception{
+    public void setLocationCoOrdinates(String address) throws Exception{
         try {
             GeoApiContext context = new GeoApiContext().setApiKey(Constants.GoogleGeoCodeAPI);
             GeocodingResult[] results = GeocodingApi.geocode(context, address).await();
