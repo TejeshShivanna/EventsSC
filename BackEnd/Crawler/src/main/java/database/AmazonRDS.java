@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -151,11 +152,13 @@ public class AmazonRDS {
         Connection connection = null;
         try{
             HashMap<String, Integer> loginAndUserID = getLoginAndUserID("usc");
+            int loginID = loginAndUserID.get("USERID");
             Crawl crawlUSC = new Crawl();
             List<Event> eventList = crawlUSC.getEventsInfo();
             Iterator<Event> eventIterator = eventList.iterator();
             Location location = new Location();
             Event event;
+            ResultSet resultSet;
 
             connection = getConnection();
             Statement statement = connection.createStatement();
@@ -170,11 +173,18 @@ public class AmazonRDS {
                 insertQuery.append("'" + formatDate(event.getDate()) + "'" + ","); // find how to insert date and time
                 insertQuery.append("'" + event.getStartTime() + "'" + ",");
                 insertQuery.append("'" + event.getEndTime() + "'" + ",");
-                insertQuery.append("'" + locationID + "'" + ","); // add location ID here
-                insertQuery.append(loginAndUserID.get("USERID"));
+                insertQuery.append("'" + locationID + "'" + ",");
+                insertQuery.append(loginID);
                 insertQuery.append(")");
                 statement.executeUpdate(insertQuery.toString());
                 insertQuery.setLength(0);
+                connection.commit();
+
+                String selectEventID = "SELECT EVENTID FROM EVENT WHERE EVENTNAME=" + "'" + event.getName() + "'" + " AND " + "LOCATIONID=" + locationID + " AND " + "EVENTDATE=" + "'" +formatDate(event.getDate()) + "'";
+                resultSet = statement.executeQuery(selectEventID);
+                if(resultSet.next()){
+                    writeToEventCategory(getCategoryID(event.getCategory()), Integer.parseInt(resultSet.getString("EVENTID")));
+                }
             }
             connection.commit();
             statement.close();
@@ -207,6 +217,7 @@ public class AmazonRDS {
 
             String getLocationIDQuery = "SELECT locationid FROM LOCATION WHERE latitude=" + location.getLatitude() + " AND " + "longitude=" + location.getLongitude();
             resultSet = statement.executeQuery(getLocationIDQuery);
+
             if(resultSet.next()) {
                 locationID = Integer.parseInt(resultSet.getString("locationid"));
             }
@@ -236,5 +247,80 @@ public class AmazonRDS {
             if(connection!=null) connection.close();
         }
         return locationID;
+    }
+
+    public List<Integer> getCategoryID(String categories) throws Exception{
+        categories = categories.substring(1, categories.length()-1);
+        Connection connection = null;
+        List<Integer> caterogyIDs = new ArrayList();
+        try {
+            connection = getConnection();
+            Statement statement = connection.createStatement();
+            ResultSet resultSet;
+
+            for(String category: categories.split(",")){
+                String selectCategory = "SELECT CATEGORYID FROM CATEGORY WHERE CATEGORYNAME=" + "'" + category.trim() + "'";
+                resultSet = statement.executeQuery(selectCategory);
+
+                if(resultSet.next()) {
+                    caterogyIDs.add(Integer.parseInt(resultSet.getString("CATEGORYID")));
+                }
+                else{
+                    StringBuffer insertQuery = new StringBuffer();
+                    insertQuery.append("INSERT INTO CATEGORY (CATEGORYNAME) VALUES(");
+                    insertQuery.append("'");
+                    insertQuery.append(category.trim());
+                    insertQuery.append("'");
+                    insertQuery.append(")");
+
+                    statement.executeUpdate(insertQuery.toString());
+                    selectCategory = "SELECT CATEGORYID FROM CATEGORY WHERE CATEGORYNAME=" + "'" + category.trim() + "'";
+                    resultSet = statement.executeQuery(selectCategory);
+                    if(resultSet.next()) {
+                        caterogyIDs.add(Integer.parseInt(resultSet.getString("CATEGORYID")));
+                    }
+                }
+            }
+            connection.commit();
+            statement.close();
+            connection.close();
+        }
+        catch(Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
+        return caterogyIDs;
+    }
+
+    public void writeToEventCategory(List<Integer> categoryIDs, int eventID) throws Exception{
+        Connection connection = null;
+        try {
+            connection = getConnection();
+            Statement statement = connection.createStatement();
+
+            String insert = "INSERT INTO EVENTCATEGORY (EVENTID, CATEGORYID) VALUES ";
+            StringBuffer insertQuery = new StringBuffer();
+            insertQuery.append(insert);
+            for(int categoryID: categoryIDs) {
+                insertQuery.append("(" + eventID + "," + categoryID + ")");
+                insertQuery.append(",");
+            }
+            insertQuery.setLength(insertQuery.length()-1);
+            insertQuery.append(";");
+            statement.executeUpdate(insertQuery.toString());
+            connection.commit();
+            statement.close();
+            connection.close();
+        }
+        catch(Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
     }
 }
