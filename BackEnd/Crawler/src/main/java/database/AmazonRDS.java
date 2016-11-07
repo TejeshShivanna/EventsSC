@@ -102,6 +102,7 @@ public class AmazonRDS {
 
             loginAndUserID.put("LOGINID", uscLoginID);
             loginAndUserID.put("USERID", uscUserID);
+            connection.commit();
         }
         catch(Exception ex){
             logger.error(ex.getMessage());
@@ -128,7 +129,7 @@ public class AmazonRDS {
                 uscLocation = uscLocationIterator.next();
                 location.setLocationCoOrdinates(uscLocation.getAddress());
                 StringBuffer insertQuery = new StringBuffer();
-                insertQuery.append("INSERT INTO LOCATION (ADDRESS, LATITUDE, LONGITUDE) VALUES(");
+                insertQuery.append("INSERT INTO LOCATION (LOCATIONNAME, LATITUDE, LONGITUDE) VALUES(");
                 insertQuery.append("'" + location.getAddress() + "'");
                 insertQuery.append("," + location.getLatitude());
                 insertQuery.append("," + location.getLongitude());
@@ -151,7 +152,7 @@ public class AmazonRDS {
     public void writeToEventTable() throws Exception{
         Connection connection = null;
         try{
-            HashMap<String, Integer> loginAndUserID = getLoginAndUserID("usc");
+            HashMap<String, Integer> loginAndUserID = getLoginAndUserID("admin@usc.edu");
             int loginID = loginAndUserID.get("USERID");
             Crawl crawlUSC = new Crawl();
             List<Event> eventList = crawlUSC.getEventsInfo();
@@ -167,12 +168,13 @@ public class AmazonRDS {
                 event = eventIterator.next();
                 location.setLocationCoOrdinates(event.getAddress());
                 int locationID = getLocationID(location);
-                insertQuery.append("INSERT INTO EVENT (EVENTNAME, EVENTDESCRIPTION, EVENTDATE, STARTTIME, ENDTIME, LOCATIONID, CREATOR) VALUES(");
+                insertQuery.append("INSERT INTO EVENT (EVENTNAME, EVENTDESCRIPTION, EVENTDATE, STARTTIME, ENDTIME, ADDRESS, LOCATIONID, CREATOR) VALUES(");
                 insertQuery.append("'" + event.getName() + "'" + ",");
                 insertQuery.append("'" + event.getDescription() + "'" + ",");
                 insertQuery.append("'" + formatDate(event.getDate()) + "'" + ","); // find how to insert date and time
                 insertQuery.append("'" + event.getStartTime() + "'" + ",");
                 insertQuery.append("'" + event.getEndTime() + "'" + ",");
+                insertQuery.append("'" + event.getAddress() + "'" + ",");
                 insertQuery.append("'" + locationID + "'" + ",");
                 insertQuery.append(loginID);
                 insertQuery.append(")");
@@ -223,7 +225,7 @@ public class AmazonRDS {
             }
             else{
                 StringBuffer insertQuery = new StringBuffer();
-                insertQuery.append("INSERT INTO LOCATION (ADDRESS, LATITUDE, LONGITUDE) VALUES(");
+                insertQuery.append("INSERT INTO LOCATION (LOCATIONNAME, LATITUDE, LONGITUDE) VALUES(");
                 insertQuery.append("'" + location.getAddress() + "'");
                 insertQuery.append("," + location.getLatitude());
                 insertQuery.append("," + location.getLongitude());
