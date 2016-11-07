@@ -1,8 +1,9 @@
-package eventssc.dao;
+package eventssc.database;
 
 import eventssc.event.Event;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.sql.*;
 import java.text.ParseException;
@@ -16,6 +17,12 @@ public class EventDao {
 	private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= current_date ORDER BY eventdate";
 	private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
 	private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, starttime, endtime, creator) VALUES (?,?,?,?,?,?)";
+	private AmazonRDS amazonRDS;
+
+	@Autowired
+	public EventDao(AmazonRDS amazonRDS){
+		this.amazonRDS = amazonRDS;
+	}
 
 	public ArrayList<Event> getAllEvents() throws DaoException {
 		Connection con = null;
@@ -25,7 +32,7 @@ public class EventDao {
 		ArrayList<Event> eventList = new ArrayList<Event>();
 
 		try {
-			con = DatabaseManager.getConnection();
+			con = amazonRDS.getConnection();
 			statement = con.createStatement();
 			result = statement.executeQuery(SQL_ALL_EVENTS);
 
@@ -35,8 +42,17 @@ public class EventDao {
 
 		} catch (SQLException e) {
 			throw new DaoException(e);
-		} finally {
-			DatabaseManager.close(result, statement);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}
+		finally {
+			try {
+				con.close();
+			}
+			catch (SQLException e) {
+				throw new DaoException(e);
+			}
 		}
 
 		return eventList;
@@ -48,7 +64,7 @@ public class EventDao {
 		PreparedStatement statement = null;
 		ResultSet result = null;
 		try {
-			con = DatabaseManager.getConnection();
+			con = amazonRDS.getConnection();
 			statement = con.prepareStatement(SQL_EVENT_BY_ID);
 			statement.setLong(1, eventID);
 			result = statement.executeQuery();
@@ -59,8 +75,16 @@ public class EventDao {
 
 		} catch (SQLException e) {
 			throw new DaoException(e);
-		} finally {
-			DatabaseManager.close(result, statement);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}finally {
+			try {
+				con.close();
+			}
+			catch (SQLException e) {
+				throw new DaoException(e);
+			}
 		}
 
 		return null;
@@ -72,7 +96,7 @@ public class EventDao {
 		ResultSet result = null;
 		double arr[] = new double[2];
 		try {
-			con = DatabaseManager.getConnection();
+			con = amazonRDS.getConnection();
 			statement = con.prepareStatement(SQL_EVENTS_LOCATION);
 			statement.setInt(1, locationID);
 			result = statement.executeQuery();
@@ -85,8 +109,16 @@ public class EventDao {
 
 		} catch (SQLException e) {
 			throw new DaoException(e);
-		} finally {
-			DatabaseManager.close(result, statement);
+		}
+		catch (Exception e){
+			e.printStackTrace();
+		}finally {
+			try {
+				con.close();
+			}
+			catch (SQLException e) {
+				throw new DaoException(e);
+			}
 		}
 		return null;
 	}
@@ -98,7 +130,7 @@ public class EventDao {
 
 		try {
 			JSONObject jsonObj = new JSONObject(jsonStr);
-			con = DatabaseManager.getConnection();
+			con = amazonRDS.getConnection();
 			statement = con.prepareStatement(SQL_INSERT_EVENT);
 
 			statement.setString(1, jsonObj.optString("name"));
@@ -118,9 +150,18 @@ public class EventDao {
 			throw new DaoException(e);
 		} catch (JSONException e) {
 			throw new DaoException(e);
-		} finally {
-			DatabaseManager.close(result, statement);
 		}
+		catch (Exception e){
+			e.printStackTrace();
+		}finally {
+			try {
+				con.close();
+			}
+			catch (SQLException e) {
+				throw new DaoException(e);
+			}
+		}
+		return false;
 
 	}
 

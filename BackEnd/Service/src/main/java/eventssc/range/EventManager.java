@@ -1,36 +1,44 @@
 package eventssc.range;
 
-import eventssc.dao.DaoException;
-import eventssc.dao.DaoFactory;
+import eventssc.database.DaoException;
+import eventssc.database.EventDao;
 import eventssc.event.Event;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 
 /*Created by iberry on 11/6/16.
  */
 public class EventManager {
-    public static ArrayList<Event> getAllEvents() throws DaoException {
-        return DaoFactory.getEventDao().getAllEvents();
+    private EventDao eventDao;
+
+    @Autowired
+    public EventManager(EventDao eventDao){
+        this.eventDao =eventDao;
     }
 
-    public static Event getEventById(long eventId) throws DaoException {
+    public ArrayList<Event> getAllEvents() throws DaoException {
+        return eventDao.getAllEvents();
+    }
+
+    public Event getEventById(long eventId) throws DaoException {
         if (eventId <= 0) {
             return null;
         }
-        Event event = DaoFactory.getEventDao().getEventById(eventId);
+        Event event = eventDao.getEventById(eventId);
 
         return event;
     }
 
-    public static boolean createEvent(String jsonStr) throws DaoException {
-        return DaoFactory.getEventDao().createEvent(jsonStr);
+    public boolean createEvent(String jsonStr) throws DaoException {
+        return eventDao.createEvent(jsonStr);
     }
 
-    public static double[] getLocationById(int locationId) throws DaoException {
+    public double[] getLocationById(int locationId) throws DaoException {
         if (locationId <= 0) {
             return null;
         }
-        double location[] = DaoFactory.getEventDao().getLocationById(locationId);
+        double location[] = eventDao.getLocationById(locationId);
         return location;
     }
 

@@ -1,4 +1,4 @@
-package eventssc.dao;
+package eventssc.database;
 
 import java.sql.SQLException;
 

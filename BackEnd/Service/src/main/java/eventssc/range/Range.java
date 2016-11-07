@@ -1,25 +1,33 @@
 package eventssc.range;
 
 import com.google.gson.Gson;
-import eventssc.dao.DaoException;
+import eventssc.database.DaoException;
+import eventssc.database.EventDao;
 import eventssc.event.Event;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 
 public class Range {
-    public static String getEventsinRange(String latLong){
+    private EventManager eventManager;
+
+    @Autowired
+    public Range(EventManager eventManager){
+        this.eventManager =eventManager;
+    }
+
+    public String getEventsinRange(String latLong){
         JSONObject cord = new JSONObject(latLong);
         double defaultDist = 0.2;
         double latitude = cord.optDouble("latitude");
         double longitude = cord.optDouble("longitude");
-        EventManager evm = new EventManager();
         try {
-            ArrayList<Event> ListOfEvents = evm.getAllEvents();
+            ArrayList<Event> ListOfEvents = eventManager.getAllEvents();
 
             ArrayList<Event> nearbyEvents = new ArrayList<Event>();
             for (Event event : ListOfEvents) {
-                double location[] = evm.getLocationById(event.getLocationID());
+                double location[] = eventManager.getLocationById(event.getLocationID());
                 event.setLatitude(location[0]);
                 event.setLongitude(location[1]);
                 double dist = distance(latitude, longitude, event.getLatitude(), event.getLongitude());
