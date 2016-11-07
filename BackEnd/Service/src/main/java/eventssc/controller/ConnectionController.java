@@ -52,7 +52,6 @@ public class ConnectionController {
             }
         }
         catch(Exception ex){
-            ex.printStackTrace();
             logger.error(ex.getMessage());
             if(connection!=null) connection.rollback();
         }
