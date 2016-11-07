@@ -2,72 +2,104 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<modelVersion>4.0.0</modelVersion>
 
-    <groupId>CSCI587</groupId>
-    <artifactId>EventsSC</artifactId>
-    <version>1.0</version>
+<groupId>CSCI587</groupId>
+<artifactId>EventsSC</artifactId>
+<version>1.0</version>
+<packaging>jar</packaging>
 
-    <parent>
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>1.4.1.RELEASE</version>
+</parent>
+
+<properties>
+    <java.version>1.8</java.version>
+    <json.simple.version>1.1.1</json.simple.version>
+    <postgresql.version>9.4.1211</postgresql.version>
+</properties>
+
+<dependencies>
+
+    <dependency>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.4.1.RELEASE</version>
-    </parent>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/org.json/json -->
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20160810</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.0</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/postgresql/postgresql -->
-        <dependency>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-remote-shell</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-tomcat</artifactId>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>com.googlecode.json-simple</groupId>
+        <artifactId>json-simple</artifactId>
+        <version>${json.simple.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+        <scope>test</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/org.json/json -->
+    <dependency>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>20160810</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+    <dependency>
+        <groupId>com.google.code.gson</groupId>
+        <artifactId>gson</artifactId>
+        <version>2.8.0</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/postgresql/postgresql -->
+    <dependency>
         <groupId>postgresql</groupId>
         <artifactId>postgresql</artifactId>
         <version>9.4.1208-jdbc42-atlassian-hosted</version>
-        </dependency>
-    </dependencies>
+    </dependency>
+</dependencies>
 
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
+<build>
+    <plugins>
+        <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+        </plugin>
+    </plugins>
+</build>
 
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
-
-    <repositories>
-        <repository>
-            <id>spring-releases</id>
-            <url>https://repo.spring.io/libs-release</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>spring-releases</id>
-            <url>https://repo.spring.io/libs-release</url>
-        </pluginRepository>
-    </pluginRepositories>
+<repositories>
+    <repository>
+        <id>spring-releases</id>
+        <url>https://repo.spring.io/libs-release</url>
+    </repository>
+</repositories>
+<pluginRepositories>
+    <pluginRepository>
+        <id>spring-releases</id>
+        <url>https://repo.spring.io/libs-release</url>
+    </pluginRepository>
+</pluginRepositories>
 </project>
