@@ -1,9 +1,10 @@
 package eventssc.database;
 
+import eventssc.dao.DaoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.sql.Connection;
-import java.sql.DriverManager;
+
+import java.sql.*;
 
 public class AmazonRDS {
 
@@ -39,14 +40,32 @@ public class AmazonRDS {
 
     public Connection getConnection() throws Exception{
         try {
-            Class.forName("org.postgresql.Driver");
             Connection connection = DriverManager.getConnection(getConnectionUrl());
             connection.setAutoCommit(false);
             return connection;
         }
         catch (Exception ex){
+            ex.printStackTrace();
             logger.error(ex.getMessage());
         }
         return null;
+    }
+
+    public static void close(ResultSet resultSet, Statement statement) throws DaoException {
+
+        try {
+
+            if (resultSet != null) {
+                resultSet.close();
+            }
+
+            if (statement != null) {
+                statement.close();
+            }
+
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+
     }
 }
