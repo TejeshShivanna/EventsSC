@@ -44,6 +44,7 @@ public class AmazonRDS {
 
     public Connection getConnection() throws Exception{
         try {
+	    Class.forName("org.postgresql.Driver");
             Connection connection = DriverManager.getConnection(getConnectionUrl());
             connection.setAutoCommit(false);
             return connection;
