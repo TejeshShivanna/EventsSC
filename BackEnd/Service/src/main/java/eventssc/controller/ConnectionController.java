@@ -5,6 +5,7 @@ import eventssc.database.AmazonRDS;
 import eventssc.event.EventBean;
 import eventssc.range.Range;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,4 +86,93 @@ public class ConnectionController {
         return eventBean.createEvent(jsonObject);
     }
 
+    /*
+    Input: UserName and Password
+    Returns LOGINID from LOGIN table if credentials are correct. Else returns -1.
+     */
+    @RequestMapping("/login")
+    public int getLogin(String username, String password) throws Exception{
+        Connection connection = null;
+        ResultSet resultSet;
+
+        try{
+            String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'" + "AND PASSWORD = \'" + password + "\'";
+
+            connection = amazonRDS.getConnection();
+            Statement statement = connection.createStatement();
+
+            resultSet = statement.executeQuery(selectLoginID);
+            if(resultSet.next()){
+                return Integer.parseInt(resultSet.getString("LOGINID"));
+            }
+        }
+        catch(Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
+        return -1;
+    }
+
+    @RequestMapping("/registeruser")
+    public int addUser(String user) throws Exception{
+        Connection connection = null;
+        ResultSet resultSet;
+
+        try{
+            JSONParser parser = new JSONParser();
+            JSONObject userJson = (JSONObject) parser.parse(user);
+
+            String username = (String)userJson.get("username");
+            String password = (String)userJson.get("password");
+            String firstname = (String)userJson.get("firstname");
+            String lastname = (String)userJson.get("lastname");
+            String phone = (String)userJson.get("phone");
+
+
+            String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'";
+
+            connection = amazonRDS.getConnection();
+            Statement statement = connection.createStatement();
+
+            resultSet = statement.executeQuery(selectLoginID);
+            if(resultSet.next()){
+                return -1;
+            }
+            else{
+                String insertUscLogin = "INSERT INTO LOGIN (USERNAME, PASSWORD) VALUES( \'" + username + "\' , \'" + password + "\')";
+                statement.executeUpdate(insertUscLogin);
+
+                resultSet = statement.executeQuery(selectLoginID);
+                if (resultSet.next()){
+                    int uscLoginID = Integer.parseInt(resultSet.getString("LOGINID"));
+
+                    StringBuilder insertUserDetail = new StringBuilder();
+                    insertUserDetail.append("INSERT INTO USERDETAILS (FIRSTNAME, LASTNAME, LOGINID, CONTACTNUMBER)");
+                    insertUserDetail.append(" VALUES(");
+
+                    insertUserDetail.append("\'" + firstname + "\'" + ",");
+                    insertUserDetail.append("\'" + lastname + "\'" + ",");
+                    insertUserDetail.append("\'" + uscLoginID + "\'" + ",");
+                    insertUserDetail.append("\'" + phone + "\'");
+                    insertUserDetail.append(")");
+
+                    statement.executeUpdate(insertUserDetail.toString());
+
+                    connection.commit();
+                    return uscLoginID;
+                }
+            }
+        }
+        catch(Exception ex){
+            logger.error(ex.getMessage());
+            if(connection!=null) connection.rollback();
+        }
+        finally {
+            if(connection!=null) connection.close();
+        }
+        return -1;
+    }
 }
