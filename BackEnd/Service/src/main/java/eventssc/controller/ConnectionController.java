@@ -103,7 +103,12 @@ public class ConnectionController {
 
             resultSet = statement.executeQuery(selectLoginID);
             if(resultSet.next()){
-                return Integer.parseInt(resultSet.getString("LOGINID"));
+                String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + Integer.parseInt(resultSet.getString("LOGINID"));
+                resultSet = statement.executeQuery(selectUserID);
+
+                if(resultSet.next()){
+                    return Integer.parseInt(resultSet.getString("USERID"));
+                }
             }
         }
         catch(Exception ex){
@@ -161,8 +166,13 @@ public class ConnectionController {
 
                     statement.executeUpdate(insertUserDetail.toString());
 
-                    connection.commit();
-                    return uscLoginID;
+                    String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + uscLoginID;
+                    resultSet = statement.executeQuery(selectUserID);
+
+                    if(resultSet.next()){
+                        connection.commit();
+                        return Integer.parseInt(resultSet.getString("USERID"));
+                    }
                 }
             }
         }
