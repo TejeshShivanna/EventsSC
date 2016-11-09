@@ -14,6 +14,8 @@ public class Event {
     private Date endTime;
     private String address;
 
+    private Date eventDate;
+
     private double latitude;
     private double longitude;
 
@@ -73,7 +75,6 @@ public class Event {
         this.endTime = endTime;
     }
 
-
     public String getAddress() {
         return address;
     }
@@ -96,5 +97,13 @@ public class Event {
 
     public void setLongitude(double longitude) {
         this.longitude = longitude;
+    }
+
+    public Date getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(Date eventDate) {
+        this.eventDate = eventDate;
     }
 }

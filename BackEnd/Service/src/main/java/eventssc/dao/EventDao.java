@@ -12,14 +12,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
 public class EventDao {
 
     private static final String SQL_EVENTS_LOCATION = "SELECT latitude,longitude FROM Location where locationID =?";
-    private static final String SQL_ALL_EVENTS = "SELECT * FROM Event ORDER BY eventdate";
+    private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= current_date ORDER BY eventdate";
     private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
 
@@ -164,10 +167,22 @@ public class EventDao {
             event.setEventID(result.getInt("eventid"));
             event.setEventName(result.getString("eventname"));
             event.setEventDescription(result.getString("eventdescription"));
-            event.setStartTime(result.getTimestamp("starttime"));
-            event.setEndTime(result.getTimestamp("endTime"));
             event.setLocationID(result.getInt("locationid"));
             event.setCreatorID(result.getInt("creator"));
+            event.setAddress(result.getString("address"));
+            event.setEventDate(result.getDate("eventdate"));
+            String startTime = result.getDate("eventdate").toString() + " " + result.getString("starttime");
+            String endTime = result.getDate("eventdate").toString() + " " + result.getString("endtime");
+
+            try {
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date stTime = sdf1.parse(startTime);
+                Date etTime = sdf1.parse(endTime);
+                event.setStartTime(stTime);
+                event.setEndTime(etTime);
+            } catch (ParseException pe) {
+                pe.printStackTrace();
+            }
 
         } catch (SQLException e) {
             throw new DaoException(e);
