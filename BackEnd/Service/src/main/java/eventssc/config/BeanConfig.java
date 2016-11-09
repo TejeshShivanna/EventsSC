@@ -5,9 +5,9 @@ import eventssc.database.AmazonRDS;
 import eventssc.event.EventBean;
 import eventssc.event.EventManager;
 import eventssc.range.Range;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class BeanConfig {

@@ -1,11 +1,11 @@
 package eventssc.event;
 
-import java.util.List;
-
 import eventssc.dao.DaoException;
 import eventssc.dao.EventDao;
 import eventssc.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 public class EventManager {
 

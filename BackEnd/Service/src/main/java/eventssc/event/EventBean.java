@@ -1,10 +1,10 @@
 package eventssc.event;
 
-import java.util.List;
-
 import com.google.gson.Gson;
 import eventssc.dao.DaoException;
 import eventssc.model.Event;
+
+import java.util.List;
 
 public class EventBean {
 
@@ -17,9 +17,6 @@ public class EventBean {
 	public String getAllEvents() throws DaoException {
 		List<Event> events = eventMgr.getAllEvents();
 		if (events != null) {
-			for (Event event : events) {
-				System.out.println(event.getEventName());
-			}
             Gson gson = new Gson();
             return gson.toJson(events);
 		}
@@ -31,9 +28,6 @@ public class EventBean {
 		Gson gson = new Gson();
 		if (event != null) {
 			// request.setAttribute(Attribute.EVENT_VIEW.toString(), product);
-			String jsonInString = gson.toJson(event);
-			System.out.println(jsonInString);
-			System.out.println(event.getEventDescription());
 			return true;
 		}
 		return false;
