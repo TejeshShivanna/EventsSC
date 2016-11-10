@@ -46,7 +46,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="First Name"/>
-            <EditText android:id="@+id/reg_firstname"
+            <EditText android:id="@+id/txt_firstName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
@@ -56,7 +56,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Last Name"/>
-            <EditText android:id="@+id/reg_lastname"
+            <EditText android:id="@+id/txt_lastName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
@@ -66,7 +66,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Phone #"/>
-            <EditText android:id="@+id/reg_phone"
+            <EditText android:id="@+id/txt_phone"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
@@ -76,7 +76,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Email"/>
-            <EditText android:id="@+id/reg_email"
+            <EditText android:id="@+id/txt_userName"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
@@ -86,16 +86,18 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Password"/>
-            <EditText android:id="@+id/reg_password"
+            <EditText android:id="@+id/txt_password"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dip"/>
+                android:layout_marginTop="5dip"
+                android:inputType="textPassword"/>
             <!-- Register Button -->
             <Button android:id="@+id/btnRegister"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dip"
-                android:text="Register New Account"/>
+                android:text="Register New Account"
+                android:onClick="submitForm"/>
             <!-- Link to Login Screen -->
             <TextView android:id="@+id/link_to_login"
                 android:layout_width="fill_parent"

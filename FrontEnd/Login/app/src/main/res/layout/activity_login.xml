@@ -23,15 +23,6 @@
             <!-- Logo Ends -->
         </LinearLayout>
         <!--  Header Ends -->
-        <!-- Footer Start -->
-        <LinearLayout android:id="@+id/footer"
-            android:layout_width="fill_parent"
-            android:layout_height="90dip"
-            android:background="@layout/footer_repeat"
-            android:layout_alignParentBottom="true"
-            android:orientation="horizontal">
-        </LinearLayout>
-        <!-- Footer Ends -->
 
         <!-- Login Form -->
         <LinearLayout
@@ -41,12 +32,13 @@
             android:layout_height="wrap_content"
             android:padding="10dip"
             android:layout_below="@id/header">
-            <!--  Email Label -->
+            <!--  Username Label -->
             <TextView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Email"/>
-            <EditText android:layout_width="fill_parent"
+            <EditText android:id="@+id/txtUsername"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
                 android:layout_marginBottom="20dip"></EditText>
@@ -55,15 +47,18 @@
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
                 android:text="Password"/>
-            <EditText android:layout_width="fill_parent"
+            <EditText android:id="@+id/txtPassword"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:inputType="textPassword"
                 android:layout_marginTop="5dip"></EditText>
             <!-- Login button -->
             <Button android:id="@+id/btnLogin"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dip"
-                android:text="Login"/>
+                android:text="Login"
+                android:onClick="submitForm"/>
             <!-- Link to Registration Screen -->
             <TextView android:id="@+id/link_to_register"
                 android:layout_width="fill_parent"
