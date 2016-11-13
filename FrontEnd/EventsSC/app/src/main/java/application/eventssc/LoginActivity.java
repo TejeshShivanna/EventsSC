@@ -102,7 +102,7 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(Integer userId) {
             if (userId != -1) {
                 Intent welcomeIntent = new Intent();
-                welcomeIntent.setClass(LoginActivity.this, MainActivity.class);
+                welcomeIntent.setClass(LoginActivity.this, MapsActivity.class);
                 welcomeIntent.putExtra("UserId", userId);
                 startActivity(welcomeIntent);
             } else {
