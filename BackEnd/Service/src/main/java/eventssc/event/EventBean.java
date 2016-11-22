@@ -1,5 +1,6 @@
 package eventssc.event;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -8,49 +9,49 @@ import eventssc.model.Event;
 
 public class EventBean {
 
-	private EventManager eventMgr;
+    private EventManager eventMgr;
 
-	public EventBean(EventManager eventMgr) {
-		this.eventMgr = eventMgr;
-	}
+    public EventBean(EventManager eventMgr) {
+        this.eventMgr = eventMgr;
+    }
 
-	public String getAllEvents() throws DaoException {
-		List<Event> events = eventMgr.getAllEvents();
-		if (events != null) {
-			for (Event event : events) {
-				System.out.println(event.getEventName());
-			}
+    public String getAllEvents() throws DaoException {
+        List<Event> events = eventMgr.getAllEvents();
+        List<Event> updatedEvents = new ArrayList<Event>();
+
+        for (Event event : events) {
+            double location[] = eventMgr.getLocationById(event.getLocationID());
+            event.setLatitude(location[0]);
+            event.setLongitude(location[1]);
+            updatedEvents.add(event);
+        }
+        if (updatedEvents != null) {
             Gson gson = new Gson();
             return gson.toJson(events);
-		}
-		return "[]";
-	}
+        }
+        return "[]";
+    }
 
-	public boolean getEventById(long eventId) throws DaoException {
-		Event event = eventMgr.getEventById(eventId);
-		Gson gson = new Gson();
-		if (event != null) {
-			// request.setAttribute(Attribute.EVENT_VIEW.toString(), product);
-			String jsonInString = gson.toJson(event);
-			System.out.println(jsonInString);
-			System.out.println(event.getEventDescription());
-			return true;
-		}
-		return false;
-	}
+    public boolean getEventById(int eventId) throws DaoException {
+        Event event = eventMgr.getEventById(eventId);
+        Gson gson = new Gson();
+        if (event != null) {
+            // request.setAttribute(Attribute.EVENT_VIEW.toString(), product);
+            String jsonInString = gson.toJson(event);
+            return true;
+        }
+        return false;
+    }
 
-	public boolean addToInterested(long eventId) throws DaoException {
+//    public boolean addToInterested(int eventId, int userId, boolean status) throws DaoException {
+//        return eventMgr.addToInterested(eventId, userId, status);
+//    }
 
-		Event event = eventMgr.getEventById(eventId);
-
-		if (event != null) {
-			return true;
-		}
-		return false;
-	}
-
-	public boolean createEvent(String jsonStr) throws DaoException{
-		return eventMgr.createEvent(jsonStr);
-	}
+    public boolean createEvent(String jsonStr) throws DaoException {
+        if (jsonStr == null || jsonStr == "{}") {
+            return false;
+        }
+        return eventMgr.createEvent(jsonStr);
+    }
 
 }
