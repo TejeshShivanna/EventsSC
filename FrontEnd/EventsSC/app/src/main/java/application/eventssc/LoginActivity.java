@@ -1,12 +1,14 @@
 package application.eventssc;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -40,11 +42,6 @@ public class LoginActivity extends AppCompatActivity {
         });
 
     }
-
-//    public void register(View view) {
-//        Intent i = new Intent(getApplicationContext(), RegisterActivity.class);
-//        startActivity(i);
-//    }
 
     public void submitForm(View view) {
         try {
@@ -102,13 +99,21 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(Integer userId) {
             if (userId != -1) {
                 Intent welcomeIntent = new Intent();
-                welcomeIntent.setClass(LoginActivity.this, MapsActivity.class);
+                welcomeIntent.setClass(LoginActivity.this, MainActivity.class);
                 welcomeIntent.putExtra("UserId", userId);
                 startActivity(welcomeIntent);
             } else {
                 usernameView.setText(null);
                 passwordView.setText(null);
-                passwordView.setError("Invalid credentials");
+
+
+                Context context = getApplicationContext();
+                CharSequence text = "Invalid credentials!";
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+
                 usernameView.requestFocus();
             }
         }
