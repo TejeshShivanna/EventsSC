@@ -26,12 +26,14 @@ public class EventListView extends AppCompatActivity {
 
     static String eventsJsonStr = "";
     static JSONArray jsonArr;
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_list_view);
 
+        userId = getIntent().getIntExtra("UserId", -1);
         eventsJsonStr = getIntent().getStringExtra("eventsJsonString");
         final ArrayList<String> list = new ArrayList<String>();
 
@@ -61,7 +63,8 @@ public class EventListView extends AppCompatActivity {
                 try {
                     JSONObject obj = (JSONObject) jsonArr.get(position);
                     Intent resultsIntent = new Intent();
-                    resultsIntent.setClass(getApplicationContext(), EventDescription.class);
+                    resultsIntent.setClass(getApplicationContext(), Description.class);
+                    resultsIntent.putExtra("UserId", userId);
                     resultsIntent.putExtra("eventObject", obj.toString());
                     startActivity(resultsIntent);
                 } catch (JSONException e){

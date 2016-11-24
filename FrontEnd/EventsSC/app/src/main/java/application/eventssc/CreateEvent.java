@@ -3,15 +3,34 @@ package application.eventssc;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.BasicHttpParams;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.DateFormatSymbols;
 import java.util.Calendar;
 
 public class CreateEvent extends AppCompatActivity {
@@ -22,6 +41,7 @@ public class CreateEvent extends AppCompatActivity {
     private int year, month, day;
 
     private TextView tvDisplayStartTime;
+    private TextView tvDisplayEndTime;
     private TimePicker timePicker1;
     private Button btnChangeTime;
 
@@ -32,10 +52,16 @@ public class CreateEvent extends AppCompatActivity {
     static final int START_TIME_DIALOG_ID = 998;
     static final int END_TIME_DIALOG_ID = 997;
 
+    String createEventUrl = "";
+
+    private int userId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_create_event);
+
+        userId = getIntent().getIntExtra("UserId", -1);
 
         dateView = (TextView) findViewById(R.id.dateLabel);
         calendar = Calendar.getInstance();
@@ -46,7 +72,6 @@ public class CreateEvent extends AppCompatActivity {
         showDate(year, month + 1, day);
 
         setCurrentTimeOnView();
-        //addListenerOnButton();
 
     }
 
@@ -63,14 +88,15 @@ public class CreateEvent extends AppCompatActivity {
     };
 
     private void showDate(int year, int month, int day) {
-        dateView.setText(new StringBuilder().append(month).append("/").append(day).append("/").append(year));
+        String monthStr = new DateFormatSymbols().getMonths()[month - 1];
+        dateView.setText(new StringBuilder().append(day).append(" ").append(monthStr.substring(0, 3)).append(" ").append(year));
     }
 
     @SuppressWarnings("deprecation")
     public void setCurrentTimeOnView() {
 
         tvDisplayStartTime = (TextView) findViewById(R.id.startTimeLabel);
-        //timePicker1 = (TimePicker) findViewById(R.id.timePicker1);
+        tvDisplayEndTime = (TextView) findViewById(R.id.endTimeLabel);
 
         final Calendar c = Calendar.getInstance();
         hour = c.get(Calendar.HOUR_OF_DAY);
@@ -78,10 +104,7 @@ public class CreateEvent extends AppCompatActivity {
 
         // set current time into textview
         tvDisplayStartTime.setText(new StringBuilder().append(pad(hour)).append(":").append(pad(minute)));
-
-        // set current time into timepicker
-        //timePicker1.setCurrentHour(hour);
-        //timePicker1.setCurrentMinute(minute);
+        tvDisplayEndTime.setText(new StringBuilder().append(pad(hour)).append(":").append(pad(minute)));
 
     }
 
@@ -90,21 +113,18 @@ public class CreateEvent extends AppCompatActivity {
         showDialog(START_TIME_DIALOG_ID);
     }
 
-//    public void addListenerOnButton() {
-//
-//        btnChangeTime = (Button) findViewById(R.id.setButton);
-//        btnChangeTime.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                showDialog(TIME_DIALOG_ID);
-//            }
-//        });
-//    }
+    @SuppressWarnings("deprecation")
+    public void setEndTime(View view) {
+        showDialog(END_TIME_DIALOG_ID);
+    }
+
 
     @Override
     @SuppressWarnings("deprecation")
     protected Dialog onCreateDialog(int id) {
         switch (id) {
+            case END_TIME_DIALOG_ID:
+                return new TimePickerDialog(this, endTimePickerListener, hour, minute, false);
             case START_TIME_DIALOG_ID:
                 return new TimePickerDialog(this, timePickerListener, hour, minute, false);
             case DATE_DIALOG_ID:
@@ -118,13 +138,19 @@ public class CreateEvent extends AppCompatActivity {
         public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
             hour = selectedHour;
             minute = selectedMinute;
-
             // set current time into textview
             tvDisplayStartTime.setText(new StringBuilder().append(pad(hour)).append(":").append(pad(minute)));
 
-            // set current time into timepicker
-            //timePicker1.setCurrentHour(hour);
-            //timePicker1.setCurrentMinute(minute);
+        }
+    };
+
+    @SuppressWarnings("deprecation")
+    private TimePickerDialog.OnTimeSetListener endTimePickerListener = new TimePickerDialog.OnTimeSetListener() {
+        public void onTimeSet(TimePicker view, int selectedHour, int selectedMinute) {
+            hour = selectedHour;
+            minute = selectedMinute;
+            // set current time into textview
+            tvDisplayEndTime.setText(new StringBuilder().append(pad(hour)).append(":").append(pad(minute)));
 
         }
     };
@@ -136,5 +162,126 @@ public class CreateEvent extends AppCompatActivity {
             return "0" + String.valueOf(c);
     }
 
+    public void generatePostUrlParams() {
+        EditText name = (EditText) this.findViewById(R.id.etEventName);
+        TextView date = (TextView) this.findViewById(R.id.dateLabel);
+        TextView startTime = (TextView) this.findViewById(R.id.startTimeLabel);
+        TextView endTime = (TextView) this.findViewById(R.id.endTimeLabel);
+        EditText description = (EditText) this.findViewById(R.id.etDescription);
+        EditText address = (EditText) this.findViewById(R.id.etAddress);
+        TextView errorMsg = (TextView) this.findViewById(R.id.errorStr);
+
+        String jsonObjString = "";
+
+        String nameStr = (name != null) ? name.getText().toString().trim() : "";
+        String dateStr = (date != null) ? date.getText().toString().trim() : "";
+        String startTimeStr = (startTime != null) ? startTime.getText().toString().trim() : "";
+        String endTimeStr = (endTime != null) ? endTime.getText().toString().trim() : "";
+        String descriptionStr = (description != null) ? description.getText().toString().trim() : "";
+        String addressStr = (address != null) ? address.getText().toString().trim() : "";
+
+        if (nameStr.length() <= 0) {
+            errorMsg.setText("Please enter the Event Name");
+            return;
+        }
+        if (descriptionStr.length() <= 0) {
+            errorMsg.setText("Please enter the Description");
+            return;
+        }
+        if (addressStr.length() <= 0) {
+            errorMsg.setText("Please enter the Event Address");
+            return;
+        }
+
+        try {
+            JSONObject obj = new JSONObject();
+            obj.put("name", nameStr);
+            obj.put("date", dateStr);
+            obj.put("starttime", startTimeStr);
+            obj.put("endtime", endTimeStr);
+            obj.put("description", descriptionStr);
+            obj.put("address", addressStr);
+            obj.put("creatorId", userId);
+            jsonObjString = obj.toString();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        try {
+
+            String encodedString = URLEncoder.encode(jsonObjString, "UTF-8");
+            ////////http://10.0.2.2:8080/
+            createEventUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/create?creationString=" + encodedString;
+            try {
+                new JsonAsyncTask().execute();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                errorMsg.setText("Failed");
+            }
+        } catch (UnsupportedEncodingException ex) {
+            errorMsg.setText(" Url Exeption ");
+        }
+
+    }
+
+    public void createEvent(View view) {
+        try {
+            generatePostUrlParams();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private class JsonAsyncTask extends AsyncTask<String, String, String> {
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            HttpGet request = new HttpGet(createEventUrl);
+            InputStream resultStream = null;
+            String result = null;
+            try {
+                HttpResponse response = httpclient.execute(request);
+                HttpEntity entity = response.getEntity();
+                resultStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                result = sb.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            return result;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            if (result != null) {
+                Toast toast = Toast.makeText(getApplicationContext(), "Event Created Successfully", Toast.LENGTH_SHORT);
+                toast.show();
+            } else {
+                Toast toast = Toast.makeText(getApplicationContext(), "Event Creation Failed", Toast.LENGTH_SHORT);
+                toast.show();
+            }
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), MainActivity.class);
+            resultsIntent.putExtra("UserId", userId);
+            startActivity(resultsIntent);
+        }
+    }
 
 }

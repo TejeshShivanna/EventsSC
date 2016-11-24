@@ -26,7 +26,9 @@
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/tvEventName"
         android:layout_toEndOf="@+id/tvEventName"
-        android:layout_toRightOf="@+id/tvEventName"/>
+        android:layout_toRightOf="@+id/tvEventName"
+        android:maxLines="1"
+        android:scrollHorizontally="true"/>
 
     <TextView
         android:id="@+id/tvEventDate"
@@ -110,16 +112,85 @@
         android:layout_alignBaseline="@+id/tvEndTime"
         android:layout_toEndOf="@+id/tvEndTime"
         android:layout_toRightOf="@+id/tvEndTime"
-        android:onClick="setStartTime"/>
+        android:onClick="setEndTime"/>
 
     <TextView
         android:id="@+id/endTimeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/tvEndTime"
-        android:layout_toEndOf="@+id/tvEndTime"
-        android:layout_toRightOf="@+id/tvEndTime"
+        android:layout_alignBaseline="@+id/setEndTime"
+        android:layout_toEndOf="@+id/setEndTime"
+        android:layout_toRightOf="@+id/setEndTime"
         android:textSize="20sp" />
+
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/tvEndTime"
+        android:layout_margin="10dp"
+        android:text="Event Description: "
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/etDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight ="1"
+        android:layout_below="@+id/tvDescription"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:inputType="textMultiLine"
+        android:maxLines ="4"/>
+
+    <TextView
+        android:id="@+id/tvAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/etDescription"
+        android:layout_margin="10dp"
+        android:text="Event Address: "
+        android:textSize="20sp" />
+
+    <EditText
+        android:id="@+id/etAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight ="1"
+        android:layout_below="@+id/tvAddress"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:inputType="textMultiLine"
+        android:maxLines ="4"/>
+
+    <Button
+        android:id="@+id/buttonCreate"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/etAddress"
+        android:text="Create Event"
+        android:onClick="createEvent"/>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/errorStr"
+        android:layout_below="@+id/buttonCreate"
+        android:layout_margin="10dp"
+        android:textSize="20sp"
+        android:textColor="#FF0000"
+        android:layout_centerHorizontal="true"
+        android:focusableInTouchMode="false"
+        android:gravity="center"
+        />
+
+
 
     <!--<TimePicker-->
         <!--android:id="@+id/timePicker1"-->

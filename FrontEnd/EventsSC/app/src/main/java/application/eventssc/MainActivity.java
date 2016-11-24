@@ -22,13 +22,16 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String webServerUrl = webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
+    private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
+    //private String webServerUrl = "http://10.0.2.2:8080/all_events";
     private String jsonString = "";
+    private int userId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        userId = getIntent().getIntExtra("UserId", -1);
     }
 
     public void submitForm(View view) {
@@ -38,6 +41,13 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void createUserEvent(View view) {
+        Intent creteEventIntent = new Intent();
+        creteEventIntent.setClass(getApplicationContext(), CreateEvent.class);
+        creteEventIntent.putExtra("UserId", userId);
+        startActivity(creteEventIntent);
     }
 
     private class JsonAsyncTask extends AsyncTask<String, String, String> {
@@ -89,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventListView.class);
             resultsIntent.putExtra("eventsJsonString", jsonString);
+            resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
     }
