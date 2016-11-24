@@ -27,7 +27,7 @@ public class EventBean {
         }
         if (updatedEvents != null) {
             Gson gson = new Gson();
-            return gson.toJson(events);
+            return gson.toJson(updatedEvents);
         }
         return "[]";
     }
@@ -43,9 +43,9 @@ public class EventBean {
         return false;
     }
 
-//    public boolean addToInterested(int eventId, int userId, boolean status) throws DaoException {
-//        return eventMgr.addToInterested(eventId, userId, status);
-//    }
+    public boolean markInterest(String interestStr) throws DaoException {
+        return eventMgr.markInterest(interestStr);
+    }
 
     public boolean createEvent(String jsonStr) throws DaoException {
         if (jsonStr == null || jsonStr == "{}") {

@@ -1,7 +1,9 @@
 package eventssc.dao;
 
 import eventssc.database.AmazonRDS;
+import eventssc.location.LocationManager;
 import eventssc.model.Event;
+import eventssc.model.Location;
 import eventssc.util.DateUtility;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -24,7 +26,10 @@ public class EventDao {
     private static final String SQL_EVENTS_LOCATION = "SELECT latitude,longitude FROM Location where locationID =?";
     private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= current_date ORDER BY eventdate";
     private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
+
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
+    private static final String SQL_INSERT_RSVP = "INSERT INTO Rsvp(userid, eventid, status) VALUES (?,?,?)";
+
 
     private AmazonRDS amazonRDS;
 
@@ -60,7 +65,7 @@ public class EventDao {
         return eventList;
     }
 
-    public Event getEventById(long eventID) throws DaoException {
+    public Event getEventById(int eventID) throws DaoException {
 
         Connection con = null;
         PreparedStatement statement = null;
@@ -84,7 +89,7 @@ public class EventDao {
         return null;
     }
 
-    public boolean createEvent(String jsonStr) throws DaoException {
+    public boolean markInterest(String jsonStr) throws DaoException {
         Connection con = null;
         PreparedStatement statement = null;
         ResultSet result = null;
@@ -92,17 +97,51 @@ public class EventDao {
         try {
             JSONObject jsonObj = new JSONObject(jsonStr);
             con = amazonRDS.getConnection();
+            statement = con.prepareStatement(SQL_INSERT_RSVP);
+            statement.setInt(1, jsonObj.optInt("userId"));
+            statement.setInt(2, jsonObj.optInt("eventId"));
+            statement.setBoolean(3, jsonObj.optBoolean("status"));
+            if (statement.executeUpdate() != 0) {
+                con.commit();
+                return true;
+            } else {
+                return false;
+            }
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
+    }
+
+    public boolean createEvent(String jsonStr) throws DaoException {
+        Connection con = null;
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
+        LocationDao ld = new LocationDao(amazonRDS);
+        LocationManager lm = new LocationManager(ld);
+
+        try {
+            JSONObject jsonObj = new JSONObject(jsonStr);
+            con = amazonRDS.getConnection();
             statement = con.prepareStatement(SQL_INSERT_EVENT);
 
+            String address = jsonObj.optString("address", "");
+            Location location = lm.setLocationCoOrdinates(address);
+
+            int locationId = lm.getLocationId(location, true);
+
             statement.setString(1, jsonObj.optString("name"));
-            statement.setInt(2, jsonObj.optInt("locationId"));
+            statement.setInt(2, locationId);
             statement.setString(3, jsonObj.optString("description"));
-            statement.setDate(4, new java.sql.Date(DateUtility.getDateFromString(jsonObj.optString("date")).getTime()));
-            statement.setTime(5,
-                    new java.sql.Time(DateUtility.getTimeFromString(jsonObj.optString("starttime")).getTime()));
-            statement.setTime(6, new java.sql.Time(DateUtility.getTimeFromString(jsonObj.optString("endtime")).getTime()));
+            statement.setDate(4, new java.sql.Date(DateUtility.getDateFromApp(jsonObj.optString("date")).getTime()));
+            statement.setTime(5, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("starttime")).getTime()));
+            statement.setTime(6, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("endtime")).getTime()));
             statement.setInt(7, jsonObj.optInt("creatorId"));
-            statement.setString(8, jsonObj.optString("address", "Default"));
+            statement.setString(8, jsonObj.optString("address", "USC"));
 
             if (statement.executeUpdate() != 0) {
                 con.commit();

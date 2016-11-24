@@ -4,34 +4,45 @@ import java.util.List;
 
 import eventssc.dao.DaoException;
 import eventssc.dao.EventDao;
+import eventssc.dao.LocationDao;
 import eventssc.model.Event;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class EventManager {
 
     private EventDao eventDao;
+    private LocationDao locationDao;
 
     @Autowired
-	public EventManager(EventDao eventDao){
-		this.eventDao = eventDao;
-	}
+    public EventManager(EventDao eventDao) {
+        this.eventDao = eventDao;
+    }
 
-	public List<Event> getAllEvents() throws DaoException {
-		return eventDao.getAllEvents();
-	}
+    public EventManager(LocationDao locationDao) {
+        this.locationDao = locationDao;
+    }
 
-	public Event getEventById(long eventId) throws DaoException {
-		if (eventId <= 0) {
-			return null;
-		}
-		Event event = eventDao.getEventById(eventId);
+    public List<Event> getAllEvents() throws DaoException {
+        return eventDao.getAllEvents();
+    }
 
-		return event;
-	}
+    public Event getEventById(int eventId) throws DaoException {
+        if (eventId <= 0) {
+            return null;
+        }
+        Event event = eventDao.getEventById(eventId);
 
-	public boolean createEvent(String jsonStr) throws DaoException{
-		return eventDao.createEvent(jsonStr);
-	}
+        return event;
+    }
+
+    public boolean createEvent(String jsonStr) throws DaoException {
+
+        return eventDao.createEvent(jsonStr);
+    }
+
+    public boolean markInterest(String interestStr) throws DaoException {
+        return eventDao.markInterest(interestStr);
+    }
 
     public double[] getLocationById(int locationId) throws DaoException {
         if (locationId <= 0) {
