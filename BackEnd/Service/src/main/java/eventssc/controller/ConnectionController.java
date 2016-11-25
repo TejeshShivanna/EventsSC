@@ -4,6 +4,7 @@ import eventssc.dao.DaoException;
 import eventssc.database.AmazonRDS;
 import eventssc.event.EventBean;
 import eventssc.range.Range;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
@@ -184,5 +185,39 @@ public class ConnectionController {
             if(connection!=null) connection.close();
         }
         return -1;
+    }
+    @RequestMapping("/geofence")
+    public String getGeoFencingDetails() throws Exception {
+        Connection connection = null;
+        ResultSet resultSet;
+        JSONArray geofenceArray = new JSONArray();
+
+        try {
+            String selectUSC = "SELECT E.EVENTNAME, L.LATITUDE, L.LONGITUDE FROM EVENT E INNER JOIN LOCATION L ON E.LOCATIONID=L.LOCATIONID WHERE E.EVENTDATE=CURRENT_DATE";
+
+            connection = amazonRDS.getConnection();
+            Statement statement = connection.createStatement();
+
+            resultSet = statement.executeQuery(selectUSC);
+
+            while (resultSet.next()) {
+                JSONObject geofence = new JSONObject();
+                geofence.put("eventname", resultSet.getString("EVENTNAME"));
+                geofence.put("latitude", resultSet.getString("LATITUDE"));
+                geofence.put("longitude", resultSet.getString("LONGITUDE"));
+                geofenceArray.add(geofence);
+            }
+            return geofenceArray.toJSONString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.getMessage());
+            if (connection != null)
+                connection.rollback();
+        } finally {
+            if (connection != null)
+                connection.close();
+        }
+        return null;
     }
 }
