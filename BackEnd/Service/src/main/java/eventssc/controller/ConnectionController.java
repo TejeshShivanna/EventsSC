@@ -4,6 +4,7 @@ import eventssc.dao.DaoException;
 import eventssc.database.AmazonRDS;
 import eventssc.event.EventBean;
 import eventssc.range.Range;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.slf4j.Logger;
@@ -60,9 +61,11 @@ public class ConnectionController {
         } catch (Exception ex) {
             ex.printStackTrace();
             logger.error(ex.getMessage());
-            if (connection != null) connection.rollback();
+            if (connection != null)
+                connection.rollback();
         } finally {
-            if (connection != null) connection.close();
+            if (connection != null)
+                connection.close();
         }
         return uscDetails;
     }
@@ -91,51 +94,50 @@ public class ConnectionController {
     Returns LOGINID from LOGIN table if credentials are correct. Else returns -1.
      */
     @RequestMapping("/login")
-    public int getLogin(String username, String password) throws Exception{
+    public int getLogin(String username, String password) throws Exception {
         Connection connection = null;
         ResultSet resultSet;
 
-        try{
+        try {
             String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'" + "AND PASSWORD = \'" + password + "\'";
 
             connection = amazonRDS.getConnection();
             Statement statement = connection.createStatement();
 
             resultSet = statement.executeQuery(selectLoginID);
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + Integer.parseInt(resultSet.getString("LOGINID"));
                 resultSet = statement.executeQuery(selectUserID);
 
-                if(resultSet.next()){
+                if (resultSet.next()) {
                     return Integer.parseInt(resultSet.getString("USERID"));
                 }
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex.getMessage());
-            if(connection!=null) connection.rollback();
-        }
-        finally {
-            if(connection!=null) connection.close();
+            if (connection != null)
+                connection.rollback();
+        } finally {
+            if (connection != null)
+                connection.close();
         }
         return -1;
     }
 
     @RequestMapping("/registeruser")
-    public int addUser(String user) throws Exception{
+    public int addUser(String user) throws Exception {
         Connection connection = null;
         ResultSet resultSet;
 
-        try{
+        try {
             JSONParser parser = new JSONParser();
             JSONObject userJson = (JSONObject) parser.parse(user);
 
-            String username = (String)userJson.get("username");
-            String password = (String)userJson.get("password");
-            String firstname = (String)userJson.get("firstname");
-            String lastname = (String)userJson.get("lastname");
-            String phone = (String)userJson.get("phone");
-
+            String username = (String) userJson.get("username");
+            String password = (String) userJson.get("password");
+            String firstname = (String) userJson.get("firstname");
+            String lastname = (String) userJson.get("lastname");
+            String phone = (String) userJson.get("phone");
 
             String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'";
 
@@ -143,15 +145,14 @@ public class ConnectionController {
             Statement statement = connection.createStatement();
 
             resultSet = statement.executeQuery(selectLoginID);
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 return -1;
-            }
-            else{
+            } else {
                 String insertUscLogin = "INSERT INTO LOGIN (USERNAME, PASSWORD) VALUES( \'" + username + "\' , \'" + password + "\')";
                 statement.executeUpdate(insertUscLogin);
 
                 resultSet = statement.executeQuery(selectLoginID);
-                if (resultSet.next()){
+                if (resultSet.next()) {
                     int uscLoginID = Integer.parseInt(resultSet.getString("LOGINID"));
 
                     StringBuilder insertUserDetail = new StringBuilder();
@@ -169,20 +170,55 @@ public class ConnectionController {
                     String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + uscLoginID;
                     resultSet = statement.executeQuery(selectUserID);
 
-                    if(resultSet.next()){
+                    if (resultSet.next()) {
                         connection.commit();
                         return Integer.parseInt(resultSet.getString("USERID"));
                     }
                 }
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex.getMessage());
-            if(connection!=null) connection.rollback();
-        }
-        finally {
-            if(connection!=null) connection.close();
+            if (connection != null)
+                connection.rollback();
+        } finally {
+            if (connection != null)
+                connection.close();
         }
         return -1;
+    }
+
+    @RequestMapping("/geofence")
+    public String getGeoFencingDetails() throws Exception {
+        Connection connection = null;
+        ResultSet resultSet;
+        JSONArray geofenceArray = new JSONArray();
+
+        try {
+            String selectUSC = "SELECT E.EVENTNAME, L.LATITUDE, L.LONGITUDE FROM EVENT E INNER JOIN LOCATION L ON E.LOCATIONID=L.LOCATIONID WHERE E.EVENTDATE=CURRENT_DATE";
+
+            connection = amazonRDS.getConnection();
+            Statement statement = connection.createStatement();
+
+            resultSet = statement.executeQuery(selectUSC);
+
+            while (resultSet.next()) {
+                JSONObject geofence = new JSONObject();
+                geofence.put("eventname", resultSet.getString("EVENTNAME"));
+                geofence.put("latitude", resultSet.getString("LATITUDE"));
+                geofence.put("longitude", resultSet.getString("LONGITUDE"));
+                geofenceArray.add(geofence);
+            }
+            return geofenceArray.toJSONString();
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            logger.error(ex.getMessage());
+            if (connection != null)
+                connection.rollback();
+        } finally {
+            if (connection != null)
+                connection.close();
+        }
+        return null;
     }
 }
