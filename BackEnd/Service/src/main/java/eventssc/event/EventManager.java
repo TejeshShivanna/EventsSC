@@ -35,13 +35,16 @@ public class EventManager {
         return event;
     }
 
-    public boolean createEvent(String jsonStr) throws DaoException {
-
-        return eventDao.createEvent(jsonStr);
-    }
-
     public boolean markInterest(String interestStr) throws DaoException {
         return eventDao.markInterest(interestStr);
+    }
+
+    public List<Event> getTodaysEvents() throws DaoException {
+        return eventDao.getTodaysEvents();
+    }
+
+    public boolean createEvent(String jsonStr) throws DaoException {
+        return eventDao.createEvent(jsonStr);
     }
 
     public double[] getLocationById(int locationId) throws DaoException {
@@ -51,5 +54,4 @@ public class EventManager {
         double location[] = eventDao.getLocationById(locationId);
         return location;
     }
-
 }

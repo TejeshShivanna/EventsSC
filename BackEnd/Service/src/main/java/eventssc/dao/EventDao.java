@@ -20,16 +20,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 public class EventDao {
 
     private static final String SQL_EVENTS_LOCATION = "SELECT latitude,longitude FROM Location where locationID =?";
     private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= current_date ORDER BY eventdate";
+    private static final String SQL_TODAY_EVENTS = "SELECT * FROM Event where eventdate = current_date ORDER BY eventdate";
     private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
 
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
     private static final String SQL_INSERT_RSVP = "INSERT INTO Rsvp(userid, eventid, status) VALUES (?,?,?)";
-
 
     private AmazonRDS amazonRDS;
 
@@ -53,7 +52,6 @@ public class EventDao {
             while (result.next()) {
                 eventList.add(createEventSet(result));
             }
-
         } catch (SQLException e) {
             throw new DaoException(e);
         } catch (Exception e) {
@@ -65,8 +63,67 @@ public class EventDao {
         return eventList;
     }
 
-    public Event getEventById(int eventID) throws DaoException {
+    private static Event createEventSet(ResultSet result) throws DaoException {
 
+        Event event = null;
+
+        try {
+
+            event = new Event();
+
+            event.setEventID(result.getInt("eventid"));
+            event.setEventName(result.getString("eventname"));
+            event.setEventDescription(result.getString("eventdescription"));
+            event.setLocationID(result.getInt("locationid"));
+            event.setCreatorID(result.getInt("creator"));
+            event.setAddress(result.getString("address"));
+            event.setEventDate(result.getDate("eventdate"));
+            String startTime = result.getDate("eventdate").toString() + " " + result.getString("starttime");
+            String endTime = result.getDate("eventdate").toString() + " " + result.getString("endtime");
+
+            try {
+                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                Date stTime = sdf1.parse(startTime);
+                Date etTime = sdf1.parse(endTime);
+                event.setStartTime(stTime);
+                event.setEndTime(etTime);
+            } catch (ParseException pe) {
+                pe.printStackTrace();
+            }
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        }
+
+        return event;
+    }
+
+    public List<Event> getTodaysEvents() throws DaoException {
+        Connection con;
+        Statement statement = null;
+        ResultSet result = null;
+
+        List<Event> eventList = new ArrayList<Event>();
+
+        try {
+            con = amazonRDS.getConnection();
+            statement = con.createStatement();
+            result = statement.executeQuery(SQL_TODAY_EVENTS);
+
+            while (result.next()) {
+                eventList.add(createEventSet(result));
+            }
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
+
+        return eventList;
+    }
+
+    public Event getEventById(long eventID) throws DaoException {
         Connection con = null;
         PreparedStatement statement = null;
         ResultSet result = null;
@@ -79,7 +136,6 @@ public class EventDao {
             if (result.next()) {
                 return createEventSet(result);
             }
-
         } catch (Exception e) {
             throw new DaoException(e);
         } finally {
@@ -149,8 +205,6 @@ public class EventDao {
             } else {
                 return false;
             }
-
-
         } catch (SQLException e) {
             throw new DaoException(e);
         } catch (JSONException e) {
@@ -160,7 +214,6 @@ public class EventDao {
         } finally {
             amazonRDS.close(result, statement);
         }
-
     }
 
     public double[] getLocationById(int locationID) throws DaoException {
@@ -179,8 +232,6 @@ public class EventDao {
                 arr[1] = result.getDouble("longitude");
                 return arr;
             }
-
-
         } catch (SQLException e) {
             throw new DaoException(e);
         } catch (Exception e) {
@@ -194,41 +245,4 @@ public class EventDao {
         }
         return null;
     }
-
-    private static Event createEventSet(ResultSet result) throws DaoException {
-
-        Event event = null;
-
-        try {
-
-            event = new Event();
-
-            event.setEventID(result.getInt("eventid"));
-            event.setEventName(result.getString("eventname"));
-            event.setEventDescription(result.getString("eventdescription"));
-            event.setLocationID(result.getInt("locationid"));
-            event.setCreatorID(result.getInt("creator"));
-            event.setAddress(result.getString("address"));
-            event.setEventDate(result.getDate("eventdate"));
-            String startTime = result.getDate("eventdate").toString() + " " + result.getString("starttime");
-            String endTime = result.getDate("eventdate").toString() + " " + result.getString("endtime");
-
-            try {
-                SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                Date stTime = sdf1.parse(startTime);
-                Date etTime = sdf1.parse(endTime);
-                event.setStartTime(stTime);
-                event.setEndTime(etTime);
-            } catch (ParseException pe) {
-                pe.printStackTrace();
-            }
-
-        } catch (SQLException e) {
-            throw new DaoException(e);
-        }
-
-        return event;
-    }
-
-
 }
