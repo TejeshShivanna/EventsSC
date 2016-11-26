@@ -22,11 +22,11 @@ public class Range {
 
     public String getEventsinRange(String latLong) throws DaoException{
 
-        double defaultDist = 0.2;
         try {
             JSONObject cord = new JSONObject(latLong);
             double latitude = cord.optDouble("latitude");
             double longitude = cord.optDouble("longitude");
+            double defaultDist = cord.optDouble("range");
             List<Event> ListOfEvents = eventManager.getAllEvents();
 
             ArrayList<Event> nearbyEvents = new ArrayList<Event>();
