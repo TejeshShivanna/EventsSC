@@ -23,6 +23,7 @@ public class EventDao {
 
     private static final String SQL_EVENTS_LOCATION = "SELECT latitude,longitude FROM Location where locationID =?";
     private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= current_date ORDER BY eventdate";
+    private static final String SQL_TODAY_EVENTS = "SELECT * FROM Event where eventdate = current_date ORDER BY eventdate";
     private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
 
@@ -44,6 +45,33 @@ public class EventDao {
             con = amazonRDS.getConnection();
             statement = con.createStatement();
             result = statement.executeQuery(SQL_ALL_EVENTS);
+
+            while (result.next()) {
+                eventList.add(createEventSet(result));
+            }
+
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
+
+        return eventList;
+    }
+
+    public List<Event> getTodaysEvents() throws DaoException {
+        Connection con;
+        Statement statement = null;
+        ResultSet result = null;
+
+        List<Event> eventList = new ArrayList<Event>();
+
+        try {
+            con = amazonRDS.getConnection();
+            statement = con.createStatement();
+            result = statement.executeQuery(SQL_TODAY_EVENTS);
 
             while (result.next()) {
                 eventList.add(createEventSet(result));

@@ -27,7 +27,7 @@ public class Range {
             double latitude = cord.optDouble("latitude");
             double longitude = cord.optDouble("longitude");
             double defaultDist = cord.optDouble("range");
-            List<Event> ListOfEvents = eventManager.getAllEvents();
+            List<Event> ListOfEvents = eventManager.getTodaysEvents();
 
             ArrayList<Event> nearbyEvents = new ArrayList<Event>();
             for (Event event : ListOfEvents) {

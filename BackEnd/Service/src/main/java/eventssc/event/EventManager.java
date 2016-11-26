@@ -20,6 +20,10 @@ public class EventManager {
 		return eventDao.getAllEvents();
 	}
 
+	public List<Event> getTodaysEvents() throws DaoException {
+		return eventDao.getTodaysEvents();
+	}
+
 	public Event getEventById(long eventId) throws DaoException {
 		if (eventId <= 0) {
 			return null;
