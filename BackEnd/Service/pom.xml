@@ -17,8 +17,10 @@
 
     <properties>
         <java.version>1.8</java.version>
+        <slf4j.version>1.7.21</slf4j.version>
         <json.simple.version>1.1.1</json.simple.version>
         <postgresql.version>9.4.1211</postgresql.version>
+        <google-maps-services.version>0.1.15</google-maps-services.version>
     </properties>
 
     <dependencies>
@@ -72,6 +74,18 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.maps</groupId>
+            <artifactId>google-maps-services</artifactId>
+            <version>${google-maps-services.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
     </dependencies>

@@ -82,9 +82,13 @@ public class ConnectionController {
     }
 
     @RequestMapping("/create")
-    public boolean createEvent(@RequestParam(value = "jsonObj", defaultValue = "{}") String jsonObj) throws DaoException {
-        String jsonObject = "{\"locationId\":228, \"creatorId\":5, \"name\":\"My Research\", \"description\":\" My Academic\",\"starttime\":\"Jan 1, 1970 11:00:00 AM\",\"endtime\":\"Jan 1, 1970 11:50:00 AM\",\"latitude\":34.0206012, \"longitude\":-118.2860922, \"address\":\"My Address\"}";
-        return eventBean.createEvent(jsonObject);
+    public String createEvent(String creationString) throws DaoException {
+        return String.valueOf(eventBean.createEvent(creationString));
+    }
+
+    @RequestMapping("/markInterest")
+    public String markInterest(String interestStr) throws DaoException{
+        return String.valueOf(eventBean.markInterest(interestStr));
     }
 
     /*
