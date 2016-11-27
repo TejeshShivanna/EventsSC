@@ -198,7 +198,7 @@ public class ConnectionController {
         JSONArray geofenceArray = new JSONArray();
 
         try {
-            String selectUSC = "SELECT E.EVENTNAME, L.LATITUDE, L.LONGITUDE FROM EVENT E INNER JOIN LOCATION L ON E.LOCATIONID=L.LOCATIONID WHERE E.EVENTDATE=CURRENT_DATE";
+            String selectUSC = "SELECT E.EVENTNAME, L.LATITUDE, L.LONGITUDE FROM EVENT E INNER JOIN LOCATION L ON E.LOCATIONID=L.LOCATIONID WHERE E.EVENTDATE=((SELECT current_date AT TIME ZONE 'PST') ::timestamp::date)";
 
             connection = amazonRDS.getConnection();
             Statement statement = connection.createStatement();
