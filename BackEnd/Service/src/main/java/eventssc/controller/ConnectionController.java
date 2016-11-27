@@ -71,7 +71,7 @@ public class ConnectionController {
     @RequestMapping("/range")
     public String rangeQuery(@RequestParam(value = "latLong", defaultValue = "{\n" +
             "                  \"latitude\" : 34.0230895,\n" +
-            "                  \"longitude\" : -118.2870363\n" +
+            "                  \"longitude\" : -118.2870363,\n" +
             "                  \"range\" : 0.2\n" +
             "               }") String latLong) throws DaoException {
         return range.getEventsinRange(latLong);
