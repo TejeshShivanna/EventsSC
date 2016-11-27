@@ -32,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 public class CreateEvent extends AppCompatActivity {
 
@@ -64,7 +65,8 @@ public class CreateEvent extends AppCompatActivity {
         userId = getIntent().getIntExtra("UserId", -1);
 
         dateView = (TextView) findViewById(R.id.dateLabel);
-        calendar = Calendar.getInstance();
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        calendar = Calendar.getInstance(tz);
         year = calendar.get(Calendar.YEAR);
 
         month = calendar.get(Calendar.MONTH);
@@ -97,8 +99,8 @@ public class CreateEvent extends AppCompatActivity {
 
         tvDisplayStartTime = (TextView) findViewById(R.id.startTimeLabel);
         tvDisplayEndTime = (TextView) findViewById(R.id.endTimeLabel);
-
-        final Calendar c = Calendar.getInstance();
+        TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+        final Calendar c = Calendar.getInstance(tz);
         hour = c.get(Calendar.HOUR_OF_DAY);
         minute = c.get(Calendar.MINUTE);
 

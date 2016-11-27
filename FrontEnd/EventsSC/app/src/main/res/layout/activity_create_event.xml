@@ -28,7 +28,10 @@
         android:layout_toEndOf="@+id/tvEventName"
         android:layout_toRightOf="@+id/tvEventName"
         android:maxLines="1"
-        android:scrollHorizontally="true"/>
+        android:scrollHorizontally="true"
+        android:inputType="text"
+        android:hint="Name of Event"
+        />
 
     <TextView
         android:id="@+id/tvEventDate"
@@ -38,19 +41,17 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/tvEventName"
         android:layout_margin="10dp"
-        android:text="Event Date: "
+        android:text="Event Date:"
         android:textSize="20sp" />
 
-    <Button
+    <ImageButton
         android:id="@+id/setButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="70dp"
         android:onClick="setDate"
-        android:text="Date"
-        android:layout_alignBaseline="@+id/tvEventDate"
+        android:layout_alignBottom="@id/tvEventDate"
+        android:background="@mipmap/ic_today_black_24dp"
         android:layout_toEndOf="@+id/tvEventDate"
         android:layout_toRightOf="@+id/tvEventDate"/>
 
@@ -58,9 +59,9 @@
         android:id="@+id/dateLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/setButton"
         android:layout_toEndOf="@+id/setButton"
         android:layout_toRightOf="@+id/setButton"
+        android:layout_alignBaseline="@id/tvEventDate"
         android:textSize="20sp" />
 
     <TextView
@@ -71,15 +72,15 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/tvEventDate"
         android:layout_margin="10dp"
-        android:text="Start Time: "
+        android:text="Start Time:"
         android:textSize="20sp" />
 
-    <Button
+    <ImageButton
         android:id="@+id/setStartTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="STime"
-        android:layout_alignBaseline="@+id/tvStartTime"
+        android:background="@mipmap/ic_access_time_black_24dp"
+        android:layout_alignBottom="@id/tvStartTime"
         android:layout_toEndOf="@+id/tvStartTime"
         android:layout_toRightOf="@+id/tvStartTime"
         android:onClick="setStartTime"/>
@@ -88,7 +89,7 @@
         android:id="@+id/startTimeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/setStartTime"
+        android:layout_alignBaseline="@+id/tvStartTime"
         android:layout_toEndOf="@+id/setStartTime"
         android:layout_toRightOf="@+id/setStartTime"
         android:textSize="20sp" />
@@ -101,15 +102,15 @@
         android:layout_alignParentStart="true"
         android:layout_below="@+id/tvStartTime"
         android:layout_margin="10dp"
-        android:text="End Time: "
+        android:text="End Time:"
         android:textSize="20sp" />
 
-    <Button
+    <ImageButton
         android:id="@+id/setEndTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ETime"
-        android:layout_alignBaseline="@+id/tvEndTime"
+        android:background="@mipmap/ic_access_time_black_24dp"
+        android:layout_alignBottom="@+id/tvEndTime"
         android:layout_toEndOf="@+id/tvEndTime"
         android:layout_toRightOf="@+id/tvEndTime"
         android:onClick="setEndTime"/>
@@ -118,7 +119,7 @@
         android:id="@+id/endTimeLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/setEndTime"
+        android:layout_alignBaseline="@+id/tvEndTime"
         android:layout_toEndOf="@+id/setEndTime"
         android:layout_toRightOf="@+id/setEndTime"
         android:textSize="20sp" />
@@ -143,6 +144,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:inputType="textMultiLine"
+        android:hint="Description"
         android:maxLines ="4"/>
 
     <TextView
@@ -165,6 +167,7 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:inputType="textMultiLine"
+        android:hint="Address"
         android:maxLines ="4"/>
 
     <Button

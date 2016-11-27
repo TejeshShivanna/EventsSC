@@ -53,6 +53,7 @@ public class Description extends FragmentActivity implements OnMapReadyCallback 
     private String setInterestUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/markInterest?interestStr=";
     private int userId;
     private int eventId = -1;
+    private String eventName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,7 @@ public class Description extends FragmentActivity implements OnMapReadyCallback 
 
             TextView eventNameTv = (TextView) findViewById(R.id.idEventName);
             eventNameTv.setText(eventObj.getString("eventName"));
+            eventName = eventObj.getString("eventName");
 
             TextView eventLocationTv = (TextView) findViewById(R.id.idEventLocation);
             eventLocationTv.setText(eventObj.getString("address"));
@@ -130,8 +132,9 @@ public class Description extends FragmentActivity implements OnMapReadyCallback 
             double latitude = eventObj.getDouble("latitude");
             double longitude = eventObj.getDouble("longitude");
             LatLng latLong = new LatLng(latitude, longitude);
-            mMap.addMarker(new MarkerOptions().position(latLong).title("Marker"));
+            mMap.addMarker(new MarkerOptions().position(latLong).title(eventName));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(latLong));
+            mMap.setMinZoomPreference(16);
         } catch (JSONException e) {
             e.printStackTrace();
         }
