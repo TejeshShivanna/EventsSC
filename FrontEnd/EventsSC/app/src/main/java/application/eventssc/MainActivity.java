@@ -2,11 +2,10 @@ package application.eventssc;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -22,7 +21,7 @@ import java.io.InputStreamReader;
 
 public class MainActivity extends AppCompatActivity {
 
-    private String webServerUrl = webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
+    private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
     private String jsonString = "";
 
     @Override
@@ -92,4 +91,5 @@ public class MainActivity extends AppCompatActivity {
             startActivity(resultsIntent);
         }
     }
+
 }

@@ -1,19 +1,17 @@
 package application.eventssc;
 
 
-import android.*;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -25,7 +23,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -61,6 +58,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     static String eventsJsonStr = "";
     private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
     private String allEventsUrl="http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
+    private String geoFenceUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/geofence";
     private String jsonString = "";
 
     @Override
@@ -156,6 +154,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (Exception e) {
             e.printStackTrace();
             return "";
+        }
+    }
+
+    public void submitGeoFenceForm(View view) {
+        try {
+            new GeoFenceJsonAsyncTask().execute();
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -400,6 +407,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(String result) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventListView.class);
+            resultsIntent.putExtra("eventsJsonString", jsonString);
+            startActivity(resultsIntent);
+        }
+    }
+
+    private class GeoFenceJsonAsyncTask extends AsyncTask<String, String, String> {
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            HttpGet request = new HttpGet(geoFenceUrl);
+            InputStream resultStream;
+            String result = null;
+            try {
+                HttpResponse response = httpclient.execute(request);
+                HttpEntity entity = response.getEntity();
+                resultStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                result = sb.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray jsonArr;
+
+            try {
+                jsonArr = new JSONArray(result != null ? result : "");
+                jsonString = jsonArr.toString();
+                Log.d("MainActivity", "json" + jsonString);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return result;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), GeoFenceActivity.class);
             resultsIntent.putExtra("eventsJsonString", jsonString);
             startActivity(resultsIntent);
         }
