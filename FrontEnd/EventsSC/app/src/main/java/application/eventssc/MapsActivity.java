@@ -13,8 +13,11 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
@@ -50,13 +53,15 @@ import java.util.ArrayList;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,GoogleMap.OnInfoWindowClickListener,SeekBar.OnSeekBarChangeListener{
+        LocationListener,GoogleMap.OnInfoWindowClickListener,SeekBar.OnSeekBarChangeListener, AdapterView.OnItemClickListener{
 
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
+    private ListView mDrawerList;
+    private ArrayAdapter<String> mAdapter;
     static String eventsJsonStr = "";
     private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
     private String allEventsUrl="http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
@@ -74,10 +79,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         seekBar = (SeekBar)findViewById(R.id.seekBarRange);
         seekBar.setProgress(2);
         seekBar.setOnSeekBarChangeListener(this);
+        mDrawerList = (ListView)findViewById(R.id.left_drawer);
+        addDrawerItems();
+        mDrawerList.setOnItemClickListener(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+    }
+
+    private void addDrawerItems() {
+        String[] osArray = { "My Profile", "Events Interested In", "Create Event", "Event created by You"};
+        mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
+        mDrawerList.setAdapter(mAdapter);
     }
 
 
@@ -342,6 +356,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onStopTrackingTouch(SeekBar seekBar) {
         Toast.makeText(getApplicationContext(),"Range: "+(double)(seekBar.getProgress())/10+" Mile(s)", Toast.LENGTH_SHORT).show();
         onLocationChanged(mLastLocation);
+
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Toast.makeText(MapsActivity.this, "The position is: "+position, Toast.LENGTH_SHORT).show();
+        if(position==0){
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), Profile.class);
+            startActivity(resultsIntent);
+        }
+        else if(position==1){
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
+            startActivity(resultsIntent);
+        }
+        else if(position==2){
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
+            startActivity(resultsIntent);
+        }
+        else if(position==3){
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
+            startActivity(resultsIntent);
+        }
 
     }
 

@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">EventsSC</string>
     <string name="title_activity_maps">Map</string>
+    <string name="title_activity_profile">Profile</string>
+    <string name="title_activity_interested_events">InterestedEvents</string>
+    <string name="title_activity_events_by_you">EventsByYou</string>
 </resources>
