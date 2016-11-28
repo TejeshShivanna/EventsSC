@@ -241,8 +241,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-
         //Initialize Google Play Services
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this,
                     android.Manifest.permission.ACCESS_FINE_LOCATION)
@@ -256,7 +256,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
-        mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
+        //mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
 
     }
 
