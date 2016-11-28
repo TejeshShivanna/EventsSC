@@ -347,6 +347,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     }
+    public void getCreatedEvents(int uid) {
+        try {
+
+            CreatedAsyncTask asyncTask=new CreatedAsyncTask(uid);
+            String result = asyncTask.execute().get();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
 
     @Override
     public void onLocationChanged(Location location) {
@@ -551,10 +563,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             startActivity(resultsIntent);
         }
         else if(position==4){
-            Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
-            resultsIntent.putExtra("UserId", userId);
-            startActivity(resultsIntent);
+            getCreatedEvents(userId);
         }
 
     }
@@ -796,6 +805,63 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(String result) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
+            resultsIntent.putExtra("eventsJsonString", jsonString);
+            startActivity(resultsIntent);
+        }
+    }
+
+    private class CreatedAsyncTask extends AsyncTask<String, String, String> {
+        int uID;
+        public CreatedAsyncTask(int uID){
+            this.uID =uID;
+        }
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            String url = createdUrl + uID;
+            HttpGet request = new HttpGet(url);
+            InputStream resultStream = null;
+            String result = null;
+            try {
+                HttpResponse response = httpclient.execute(request);
+                HttpEntity entity = response.getEntity();
+                resultStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                result = sb.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray jsonArr;
+
+            try {
+                jsonArr = new JSONArray(result != null ? result : "");
+                jsonString = jsonArr.toString();
+                Log.d("MainActivity", "json" + jsonString);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return result;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
             resultsIntent.putExtra("eventsJsonString", jsonString);
             startActivity(resultsIntent);
         }
