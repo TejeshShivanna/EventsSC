@@ -23,7 +23,7 @@ import java.util.List;
 public class EventDao {
 
     private static final String SQL_EVENTS_LOCATION = "SELECT latitude,longitude FROM Location where locationID =?";
-    private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date) AND ENDTIME>=(SELECT ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::time))";
+    private static final String SQL_ALL_EVENTS = "SELECT * FROM Event where eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date)";
     private static final String SQL_TODAY_EVENTS = "SELECT * FROM Event where eventdate = ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date) AND ENDTIME>=(SELECT ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::time)) ORDER BY eventdate";
     private static final String SQL_EVENT_BY_ID = "SELECT * FROM Event WHERE eventid = ?";
 
