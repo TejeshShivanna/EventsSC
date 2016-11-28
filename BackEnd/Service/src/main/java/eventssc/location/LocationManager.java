@@ -9,19 +9,13 @@ import eventssc.dao.DaoException;
 import eventssc.dao.LocationDao;
 import eventssc.model.Location;
 import eventssc.util.Constants;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 
-
-/**
- * Created by Sharath_GM on 11/12/16.
- */
 public class LocationManager {
 
     private LocationDao locationDao;
-
-//    public LocationManager() {
-//        this.locationDao = null;
-//    }
 
     @Autowired
     public LocationManager(LocationDao locationDao) {
@@ -46,6 +40,24 @@ public class LocationManager {
             ex.printStackTrace();
         }
         return location;
+    }
+
+    public String reverseGeoCode(String input) throws Exception {
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject latlngJson = (JSONObject) parser.parse(input);
+
+            Double latitude = (Double) latlngJson.get("latitude");
+            Double longitude = (Double) latlngJson.get("longitude");
+
+            GeoApiContext context = new GeoApiContext().setApiKey(Constants.GoogleGeoCodeAPI);
+            LatLng latLng = new LatLng(latitude, longitude);
+            String result = GeocodingApi.newRequest(context).latlng(latLng).await()[0].formattedAddress;
+            return result;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return null;
     }
 
 }
