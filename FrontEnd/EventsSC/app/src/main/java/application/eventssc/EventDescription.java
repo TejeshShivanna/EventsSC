@@ -35,7 +35,7 @@ import java.util.Date;
 public class EventDescription extends FragmentActivity implements OnMapReadyCallback {
 
     static String eventsJsonStr = "";
-    private static Boolean interested = false;
+    public static Boolean interested = false;
     private GoogleMap mMap;
     //    private String setInterestUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/markInterest?interestStr=";
     private String setInterestUrlDefault = "http://eventssc.us-west-2.elasticbeanstalk.com/eventInterested?interestStr=";
@@ -88,6 +88,13 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
         mapFragment.getMapAsync(this);
 
         final FloatingActionButton myFab = (FloatingActionButton) findViewById(R.id.fab);
+
+        if (interested) {
+            myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.interested));
+        }
+        else{
+            myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.not_interested));
+        }
 
         myFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
