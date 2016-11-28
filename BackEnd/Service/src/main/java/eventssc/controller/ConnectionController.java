@@ -4,6 +4,7 @@ import eventssc.dao.DaoException;
 import eventssc.database.AmazonRDS;
 import eventssc.event.EventBean;
 import eventssc.range.Range;
+import eventssc.user.UserManager;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -90,6 +91,16 @@ public class ConnectionController {
     @RequestMapping("/markInterest")
     public String markInterest(String interestStr) throws DaoException{
         return String.valueOf(eventBean.markInterest(interestStr));
+    }
+
+    @RequestMapping("/getUser")
+    public String getUserName(String userIdStr) throws DaoException{
+        return UserManager.getFirstNameFromId(userIdStr, amazonRDS);
+    }
+
+    @RequestMapping("/getInterestedEvents")
+    public String getInterestedEvents(String userIdStr) throws DaoException{
+        return eventBean.getInterestedEvents(userIdStr);
     }
 
     /*

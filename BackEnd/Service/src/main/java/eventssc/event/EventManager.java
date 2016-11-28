@@ -54,4 +54,8 @@ public class EventManager {
         double location[] = eventDao.getLocationById(locationId);
         return location;
     }
+
+    public List<Event> getInterestedEvents(int userId) throws DaoException {
+        return eventDao.getInterestedEvents(userId);
+    }
 }

@@ -30,6 +30,8 @@ public class EventDao {
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
     private static final String SQL_INSERT_RSVP = "INSERT INTO Rsvp(userid, eventid, status) VALUES (?,?,?)";
 
+    private static final String SQL_GET_INTERESTED_EVENTS = "SELECT * FROM Event e INNER JOIN Rsvp r ON e.eventid = r.eventid WHERE status=true AND userid = ?";
+
     private AmazonRDS amazonRDS;
 
     @Autowired
@@ -60,6 +62,30 @@ public class EventDao {
             amazonRDS.close(result, statement);
         }
 
+        return eventList;
+    }
+
+    public List<Event> getInterestedEvents(int userId) throws DaoException {
+        Connection con = null;
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
+        List<Event> eventList = new ArrayList<Event>();
+
+        try {
+            con = amazonRDS.getConnection();
+            statement = con.prepareStatement(SQL_GET_INTERESTED_EVENTS);
+            statement.setLong(1, userId);
+            result = statement.executeQuery();
+
+            while (result.next()) {
+                eventList.add(createEventSet(result));
+            }
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
         return eventList;
     }
 
