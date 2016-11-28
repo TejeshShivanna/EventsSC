@@ -155,16 +155,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         try {
+            if(getGeofencingRequest()!=null) {
+                LocationServices.GeofencingApi.addGeofences(
+                        mGoogleApiClient,
+                        // The GeofenceRequest object
 
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    // The GeofenceRequest object.
-                    getGeofencingRequest(),
-                    // A pending intent that that is reused when calling removeGeofences(). This
-                    // pending intent is used to generate an intent when a matched geofence
-                    // transition is observed.
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
+                        getGeofencingRequest(),
+                        // A pending intent that that is reused when calling removeGeofences(). This
+                        // pending intent is used to generate an intent when a matched geofence
+                        // transition is observed.
+                        getGeofencePendingIntent()
+                ).setResultCallback(this);
+            }// Result processed in onResult().
         } catch (SecurityException securityException) {
         }
     }
@@ -214,18 +216,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
     private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        try {
+            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
 
-        // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
-        // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
-        // is already inside that geofence.
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+            // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
+            // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
+            // is already inside that geofence.
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
 
-        // Add the geofences to be monitored by geofencing service.
-        builder.addGeofences(mGeofenceList);
+            // Add the geofences to be monitored by geofencing service.
+            builder.addGeofences(mGeofenceList);
 
-        // Return a GeofencingRequest.
-        return builder.build();
+            // Return a GeofencingRequest.
+            return builder.build();
+        }
+        catch (Exception e){
+
+        }
+        return null;
     }
 
     /**
