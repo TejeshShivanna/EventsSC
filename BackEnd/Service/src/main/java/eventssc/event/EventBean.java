@@ -7,8 +7,6 @@ import com.google.gson.Gson;
 import eventssc.dao.DaoException;
 import eventssc.model.Event;
 
-import java.util.List;
-
 public class EventBean {
 
     private EventManager eventMgr;
@@ -19,7 +17,7 @@ public class EventBean {
 
     public String getAllEvents() throws DaoException {
         List<Event> events = eventMgr.getAllEvents();
-        List<Event> updatedEvents = new ArrayList<Event>();
+        List<Event> updatedEvents = new ArrayList();
 
         for (Event event : events) {
             double location[] = eventMgr.getLocationById(event.getLocationID());
@@ -46,7 +44,7 @@ public class EventBean {
     }
 
     public String getInterestedEvents(String userIdStr) throws DaoException{
-        List<Event> events = new ArrayList<>();
+        List<Event> events;
         List<Event> updatedEvents = new ArrayList<>();
         if (userIdStr != null) {
             events = eventMgr.getInterestedEvents(Integer.parseInt(userIdStr));
@@ -73,5 +71,32 @@ public class EventBean {
             return false;
         }
         return eventMgr.createEvent(jsonStr);
+    }
+
+    public String getCreatedEvents(String userIdStr) throws DaoException {
+        List<Event> events;
+        List<Event> updatedEvents = new ArrayList<>();
+        if (userIdStr != null) {
+            events = eventMgr.getCreatedEvents(Integer.parseInt(userIdStr));
+            for (Event event : events) {
+                double location[] = eventMgr.getLocationById(event.getLocationID());
+                event.setLatitude(location[0]);
+                event.setLongitude(location[1]);
+                updatedEvents.add(event);
+            }
+            if (updatedEvents != null) {
+                Gson gson = new Gson();
+                return gson.toJson(updatedEvents);
+            }
+        }
+        return "[]";
+    }
+
+    public String getUsersInterested(String eventIdStr) throws DaoException{
+        if(eventIdStr != null) {
+            return String.join(",", eventMgr.getUsersInterested(Integer.parseInt(eventIdStr)));
+        }
+        return "[]";
+
     }
 }

@@ -42,14 +42,9 @@ public class LocationManager {
         return location;
     }
 
-    public String reverseGeoCode(String input) throws Exception {
+
+    public String reverseGeoCode(Double latitude, Double longitude) throws Exception {
         try {
-            JSONParser parser = new JSONParser();
-            JSONObject latlngJson = (JSONObject) parser.parse(input);
-
-            Double latitude = (Double) latlngJson.get("latitude");
-            Double longitude = (Double) latlngJson.get("longitude");
-
             GeoApiContext context = new GeoApiContext().setApiKey(Constants.GoogleGeoCodeAPI);
             LatLng latLng = new LatLng(latitude, longitude);
             String result = GeocodingApi.newRequest(context).latlng(latLng).await()[0].formattedAddress;
@@ -60,4 +55,11 @@ public class LocationManager {
         return null;
     }
 
+    public Location setLocationAddress(Double latitude, Double longitude) throws Exception {
+        Location location = new Location();
+        location.setLatitude(latitude);
+        location.setLongitude(longitude);
+        location.setLocationName(reverseGeoCode(latitude, longitude));
+        return location;
+    }
 }
