@@ -74,6 +74,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
     private String allEventsUrl="http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
     private String jsonString = "";
+    private String userNameUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/getUser?userIdStr=";
+    private String InterestedUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
+    private String CreatedUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
     SeekBar seekBar;
     ArrayList<MarkerOptions> allMarkers = new ArrayList<MarkerOptions>();
 
@@ -141,7 +144,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void addDrawerItems() {
-        String[] osArray = { "My Profile", "Events Interested In", "Create Event", "Event created by You"};
+        String userName = "Hello, " + getUserName(userId);
+        String[] osArray = { userName,"Home", "Events Interested In", "Create Event", "Event created by You"};
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
@@ -311,6 +315,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             JsonAsyncTask asyncTask =  new JsonAsyncTask(lat,lon,range);
             String result = asyncTask.execute().get();
+            return result;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    public String getUserName(int uid) {
+        try {
+
+            UserAsyncTask userAsyncTask=new UserAsyncTask(uid);
+            String result = userAsyncTask.execute().get();
             return result;
 
         } catch (Exception e) {
@@ -504,24 +521,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if(position==0){
-            Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), Profile.class);
-            resultsIntent.putExtra("UserId", userId);
-            startActivity(resultsIntent);
+
         }
         else if(position==1){
             Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
+            resultsIntent.setClass(getApplicationContext(), MapsActivity.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
         else if(position==2){
             Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
+            resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
         else if(position==3){
+            Intent resultsIntent = new Intent();
+            resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
+            resultsIntent.putExtra("UserId", userId);
+            startActivity(resultsIntent);
+        }
+        else if(position==4){
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
             resultsIntent.putExtra("UserId", userId);
@@ -668,5 +688,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             startActivity(resultsIntent);
         }
     }
+
+    private class UserAsyncTask extends AsyncTask<String, String, String> {
+        int uid;
+
+        public UserAsyncTask(int uid){
+            this.uid =uid;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            String url = userNameUrl + uid;
+            HttpGet request = new HttpGet(url);
+            InputStream resultStream = null;
+            String result = null;
+            try {
+                HttpResponse response = httpclient.execute(request);
+                HttpEntity entity = response.getEntity();
+                resultStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                result = sb.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return result;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+        }
+    }
+
 
 }
