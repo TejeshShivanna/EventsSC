@@ -280,7 +280,7 @@ public class CreateEvent extends AppCompatActivity {
                 toast.show();
             }
             Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), MainActivity.class);
+            resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }

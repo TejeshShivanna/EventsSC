@@ -2,11 +2,14 @@ package application.eventssc;
 
 
 import android.*;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
@@ -23,6 +26,10 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -49,11 +56,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,GoogleMap.OnInfoWindowClickListener,SeekBar.OnSeekBarChangeListener, AdapterView.OnItemClickListener{
+        LocationListener,GoogleMap.OnInfoWindowClickListener,SeekBar.OnSeekBarChangeListener, AdapterView.OnItemClickListener,ResultCallback<Status> {
 
     private GoogleMap mMap;
     GoogleApiClient mGoogleApiClient;
@@ -69,6 +77,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     SeekBar seekBar;
     ArrayList<MarkerOptions> allMarkers = new ArrayList<MarkerOptions>();
 
+
+    protected static final String TAG = "GeoFenceActivity";
+
+
+    protected ArrayList<Geofence> mGeofenceList;
+
+    private boolean mGeofencesAdded;
+
+    private PendingIntent mGeofencePendingIntent;
+
+    private SharedPreferences mSharedPreferences;
+
+    private GeoFenceConstants geoFenceConstants;
+    int userId;
+
+
+
+
+
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,12 +106,34 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             checkLocationPermission();
         }
+        userId = getIntent().getIntExtra("UserId", -1);
         seekBar = (SeekBar)findViewById(R.id.seekBarRange);
         seekBar.setProgress(2);
         seekBar.setOnSeekBarChangeListener(this);
         mDrawerList = (ListView)findViewById(R.id.left_drawer);
         addDrawerItems();
         mDrawerList.setOnItemClickListener(this);
+
+
+        // Empty list for storing geofences.
+        mGeofenceList = new ArrayList();
+
+        // Initially set the PendingIntent used in addGeofences() and removeGeofences() to null.
+        mGeofencePendingIntent = null;
+
+        geoFenceConstants = new GeoFenceConstants();
+
+        // Retrieve an instance of the SharedPreferences object.
+        mSharedPreferences = getSharedPreferences(GeoFenceConstants.SHARED_PREFERENCES_NAME,
+                MODE_PRIVATE);
+
+        // Get the value of mGeofencesAdded from SharedPreferences. Set to false as a default.
+        mGeofencesAdded = mSharedPreferences.getBoolean(GeoFenceConstants.GEOFENCES_ADDED_KEY, false);
+
+        // Get the geofences used. Geofence data is hard coded in this sample.
+        populateGeofenceList();
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -94,6 +146,87 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mDrawerList.setAdapter(mAdapter);
     }
 
+
+    public void addGeofences() {
+        populateGeofenceList();
+        if (!mGoogleApiClient.isConnected()) {
+            Toast.makeText(this, getString(R.string.not_connected), Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            
+            LocationServices.GeofencingApi.addGeofences(
+                    mGoogleApiClient,
+                    // The GeofenceRequest object.
+                    getGeofencingRequest(),
+                    // A pending intent that that is reused when calling removeGeofences(). This
+                    // pending intent is used to generate an intent when a matched geofence
+                    // transition is observed.
+                    getGeofencePendingIntent()
+            ).setResultCallback(this); // Result processed in onResult().
+        } catch (SecurityException securityException) {
+        }
+    }
+
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (mGeofencePendingIntent != null) {
+            return mGeofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceTransitionsIntentService.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when calling
+        // addGeofences() and removeGeofences().
+        return PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    public void populateGeofenceList() {
+
+        geoFenceConstants.updateGeoFencesList();
+        for (Map.Entry<String, LatLng> entry : GeoFenceConstants.LANDMARKS.entrySet()) {
+
+            mGeofenceList.add(new Geofence.Builder()
+                    // Set the request ID of the geofence. This is a string to identify this
+                    // geofence.
+                    .setRequestId(entry.getKey())
+
+                    // Set the circular region of this geofence.
+                    .setCircularRegion(
+                            entry.getValue().latitude,
+                            entry.getValue().longitude,
+                            GeoFenceConstants.GEOFENCE_RADIUS_IN_METERS
+                    )
+
+                    // Set the expiration duration of the geofence. This geofence gets automatically
+                    // removed after this period of time.
+                    .setExpirationDuration(GeoFenceConstants.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+
+                    // Set the transition types of interest. Alerts are only generated for these
+                    // transition. We track entry and exit transitions in this sample.
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
+                            Geofence.GEOFENCE_TRANSITION_EXIT)
+
+                    // Create the geofence.
+                    .build());
+        }
+    }
+
+
+    private GeofencingRequest getGeofencingRequest() {
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+
+        // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
+        // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
+        // is already inside that geofence.
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+
+        // Add the geofences to be monitored by geofencing service.
+        builder.addGeofences(mGeofenceList);
+
+        // Return a GeofencingRequest.
+        return builder.build();
+    }
 
     /**
      * Manipulates the map once available.
@@ -186,6 +319,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mCurrLocationMarker.remove();
         }
         mMap.clear();
+        addGeofences();
         if(!allMarkers.isEmpty())
         {
             for (int i =0;i<allMarkers.size();i++){
@@ -361,30 +495,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Toast.makeText(MapsActivity.this, "The position is: "+position, Toast.LENGTH_SHORT).show();
         if(position==0){
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), Profile.class);
+            resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
         else if(position==1){
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
+            resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
         else if(position==2){
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
+            resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
         else if(position==3){
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
+            resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
         }
 
     }
 
+    @Override
+    public void onResult(Status status) {
+        if (status.isSuccess()) {
+            // Update state and save in shared preferences.
+            mGeofencesAdded = !mGeofencesAdded;
+            SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.putBoolean(GeoFenceConstants.GEOFENCES_ADDED_KEY, mGeofencesAdded);
+            editor.apply();
+
+            // Update the UI. Adding geofences enables the Remove Geofences button, and removing
+            // geofences enables the Add Geofences button.
+
+        } else {
+
+        }
+    }
     private class JsonAsyncTask extends AsyncTask<String, String, String> {
         double latitude;
         double longitude;

@@ -55,6 +55,8 @@
             android:name=".EventsByYou"
             android:label="@string/title_activity_events_by_you"
             android:theme="@style/AppTheme.NoActionBar"></activity>
+
+        <service android:name=".GeofenceTransitionsIntentService" />
     </application>
 
 </manifest>
