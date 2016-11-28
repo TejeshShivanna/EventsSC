@@ -560,6 +560,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
             resultsIntent.putExtra("UserId", userId);
+            resultsIntent.putExtra("latitude",mLastLocation.getLatitude());
+            resultsIntent.putExtra("longitude",mLastLocation.getLongitude());
             startActivity(resultsIntent);
         }
         else if(position==4){

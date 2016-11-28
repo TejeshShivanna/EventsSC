@@ -9,7 +9,13 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="application.eventssc.CreateEvent">
-
+    <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scrollbars="vertical">
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
     <TextView
         android:id="@+id/tvEventName"
         android:layout_width="wrap_content"
@@ -158,17 +164,17 @@
         android:text="Event Address: "
         android:textSize="20sp" />
 
-    <EditText
-        android:id="@+id/etAddress"
+
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight ="1"
+        android:layout_height="400dp"
         android:layout_below="@+id/tvAddress"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:inputType="textMultiLine"
-        android:hint="Address"
-        android:maxLines ="4"/>
+        android:id="@+id/map"
+        tools:context=".Description"
+        android:name="com.google.android.gms.maps.SupportMapFragment" />
 
     <Button
         android:id="@+id/buttonCreate"
@@ -176,7 +182,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/etAddress"
+        android:layout_below="@+id/map"
         android:text="Create Event"
         android:onClick="createEvent"/>
 
@@ -192,6 +198,8 @@
         android:focusableInTouchMode="false"
         android:gravity="center"
         />
+        </RelativeLayout>
+    </ScrollView>
 
 
 

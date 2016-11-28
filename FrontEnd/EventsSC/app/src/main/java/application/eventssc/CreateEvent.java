@@ -4,7 +4,9 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.location.Location;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +17,15 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -34,17 +45,23 @@ import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.TimeZone;
 
-public class CreateEvent extends AppCompatActivity {
+public class CreateEvent extends FragmentActivity implements OnMapReadyCallback {
 
     private DatePicker datePicker;
+    private GoogleMap mMap;
     private Calendar calendar;
     private TextView dateView;
     private int year, month, day;
+    String jsonString;
+    double latitude;
+    double longitude;
+    Marker fmarker;
 
     private TextView tvDisplayStartTime;
     private TextView tvDisplayEndTime;
     private TimePicker timePicker1;
     private Button btnChangeTime;
+    private String createdUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/getCreatedEvents?userIdStr=";
 
     private int hour;
     private int minute;
@@ -63,6 +80,9 @@ public class CreateEvent extends AppCompatActivity {
         setContentView(R.layout.activity_create_event);
 
         userId = getIntent().getIntExtra("UserId", -1);
+        latitude = getIntent().getDoubleExtra("latitude",0.0);
+        longitude = getIntent().getDoubleExtra("longitude",0.0);
+
 
         dateView = (TextView) findViewById(R.id.dateLabel);
         TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
@@ -74,6 +94,11 @@ public class CreateEvent extends AppCompatActivity {
         showDate(year, month + 1, day);
 
         setCurrentTimeOnView();
+
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
 
     }
 
@@ -170,7 +195,6 @@ public class CreateEvent extends AppCompatActivity {
         TextView startTime = (TextView) this.findViewById(R.id.startTimeLabel);
         TextView endTime = (TextView) this.findViewById(R.id.endTimeLabel);
         EditText description = (EditText) this.findViewById(R.id.etDescription);
-        EditText address = (EditText) this.findViewById(R.id.etAddress);
         TextView errorMsg = (TextView) this.findViewById(R.id.errorStr);
 
         String jsonObjString = "";
@@ -180,7 +204,6 @@ public class CreateEvent extends AppCompatActivity {
         String startTimeStr = (startTime != null) ? startTime.getText().toString().trim() : "";
         String endTimeStr = (endTime != null) ? endTime.getText().toString().trim() : "";
         String descriptionStr = (description != null) ? description.getText().toString().trim() : "";
-        String addressStr = (address != null) ? address.getText().toString().trim() : "";
 
         if (nameStr.length() <= 0) {
             errorMsg.setText("Please enter the Event Name");
@@ -188,10 +211,6 @@ public class CreateEvent extends AppCompatActivity {
         }
         if (descriptionStr.length() <= 0) {
             errorMsg.setText("Please enter the Description");
-            return;
-        }
-        if (addressStr.length() <= 0) {
-            errorMsg.setText("Please enter the Event Address");
             return;
         }
 
@@ -202,8 +221,9 @@ public class CreateEvent extends AppCompatActivity {
             obj.put("starttime", startTimeStr);
             obj.put("endtime", endTimeStr);
             obj.put("description", descriptionStr);
-            obj.put("address", addressStr);
             obj.put("creatorId", userId);
+            obj.put("latitude", latitude);
+            obj.put("longitude", longitude);
             jsonObjString = obj.toString();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -234,6 +254,40 @@ public class CreateEvent extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        LatLng sydney = new LatLng(latitude, longitude);
+        fmarker = mMap.addMarker(new MarkerOptions().position(sydney).title("Your Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(16));
+        mMap.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+            @Override
+            public void onMapClick(LatLng latLng) {
+                mMap.clear();
+                mMap.addMarker(new MarkerOptions().position(latLng).title("Your Location"));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+                latitude= latLng.latitude;
+                longitude = latLng.longitude;
+            }
+        });
+    }
+
+
+
+    public void getCreatedEvents(int uid) {
+        try {
+
+            CreateEvent.CreatedAsyncTask asyncTask=new CreateEvent.CreatedAsyncTask(uid);
+            String result = asyncTask.execute().get();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+
+        }
+    }
+
 
     private class JsonAsyncTask extends AsyncTask<String, String, String> {
 
@@ -279,9 +333,64 @@ public class CreateEvent extends AppCompatActivity {
                 Toast toast = Toast.makeText(getApplicationContext(), "Event Creation Failed", Toast.LENGTH_SHORT);
                 toast.show();
             }
+            getCreatedEvents(userId);
+        }
+    }
+
+
+    private class CreatedAsyncTask extends AsyncTask<String, String, String> {
+        int uID;
+        public CreatedAsyncTask(int uID){
+            this.uID =uID;
+        }
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
+            String url = createdUrl + uID;
+            HttpGet request = new HttpGet(url);
+            InputStream resultStream = null;
+            String result = null;
+            try {
+                HttpResponse response = httpclient.execute(request);
+                HttpEntity entity = response.getEntity();
+                resultStream = entity.getContent();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
+                StringBuilder sb = new StringBuilder();
+
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line + "\n");
+                }
+                result = sb.toString();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            JSONArray jsonArr;
+
+            try {
+                jsonArr = new JSONArray(result != null ? result : "");
+                jsonString = jsonArr.toString();
+                Log.d("MainActivity", "json" + jsonString);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return result;
+
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
-            resultsIntent.putExtra("UserId", userId);
+            resultsIntent.putExtra("eventsJsonString", jsonString);
             startActivity(resultsIntent);
         }
     }
