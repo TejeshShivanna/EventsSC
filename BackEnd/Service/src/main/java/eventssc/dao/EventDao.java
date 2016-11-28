@@ -4,6 +4,7 @@ import eventssc.database.AmazonRDS;
 import eventssc.location.LocationManager;
 import eventssc.model.Event;
 import eventssc.model.Location;
+import eventssc.model.User;
 import eventssc.util.DateUtility;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,6 +34,7 @@ public class EventDao {
     private static final String SQL_GET_INTERESTED_EVENTS = "SELECT * FROM Event e INNER JOIN Rsvp r ON e.eventid = r.eventid WHERE r.status=true AND r.userid = ? AND e.eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date)";
     private static final String SQL_GET_CREATED_EVENTS = "SELECT * FROM Event WHERE creator = ? AND eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date)";
 
+    private static final String SQL_GET_USERS_INTERESTED = "SELECT firstname, lastname FROM Userdetails u INNER JOIN Rsvp r ON u.userid = r.userid WHERE r.status=true AND r.eventid = ?";
 
     private AmazonRDS amazonRDS;
 
@@ -114,7 +116,6 @@ public class EventDao {
         }
         return eventList;
     }
-
 
 
     private static Event createEventSet(ResultSet result) throws DaoException {
@@ -226,6 +227,59 @@ public class EventDao {
         }
     }
 
+    public boolean createEventWithLatLong(String jsonStr) throws DaoException {
+        Connection con = null;
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
+        LocationDao ld = new LocationDao(amazonRDS);
+        LocationManager lm = new LocationManager(ld);
+
+        try {
+            JSONObject jsonObj = new JSONObject(jsonStr);
+            con = amazonRDS.getConnection();
+            statement = con.prepareStatement(SQL_INSERT_EVENT);
+
+            String address = jsonObj.optString("address", "");
+            int locationId = -1;
+            if (address.equals("")) {
+                Double latitude = jsonObj.optDouble("latitude");
+                Double longitude = jsonObj.optDouble("longitude");
+                Location location = lm.setLocationAddress(latitude, longitude);
+                locationId = lm.getLocationId(location, true);
+            } else {
+                Location location = lm.setLocationCoOrdinates(address);
+                locationId = lm.getLocationId(location, true);
+            }
+
+            statement.setString(1, jsonObj.optString("name"));
+            statement.setInt(2, locationId);
+            statement.setString(3, jsonObj.optString("description"));
+            statement.setDate(4, new java.sql.Date(DateUtility.getDateFromApp(jsonObj.optString("date")).getTime()));
+            statement.setTime(5, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("starttime")).getTime()));
+            statement.setTime(6, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("endtime")).getTime()));
+            statement.setInt(7, jsonObj.optInt("creatorId"));
+            statement.setString(8, address);
+
+            if (statement.executeUpdate() != 0) {
+                con.commit();
+                return true;
+            } else {
+                return false;
+            }
+
+
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (JSONException e) {
+            throw new DaoException(e);
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
+    }
+
     public boolean createEvent(String jsonStr) throws DaoException {
         Connection con = null;
         PreparedStatement statement = null;
@@ -298,5 +352,32 @@ public class EventDao {
             }
         }
         return null;
+    }
+
+    public List<String> getUsersInterested(int eventId) throws DaoException {
+        List<String> userList = new ArrayList<>();
+        Connection con = null;
+        PreparedStatement statement = null;
+        ResultSet result = null;
+        try {
+            con = amazonRDS.getConnection();
+            statement = con.prepareStatement(SQL_GET_USERS_INTERESTED);
+            statement.setInt(1, eventId);
+            result = statement.executeQuery();
+            while (result.next()) {
+                userList.add(result.getString("firstname") + " " + result.getString("lastname"));
+            }
+        } catch (SQLException e) {
+            throw new DaoException(e);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                con.close();
+            } catch (SQLException e) {
+                throw new DaoException(e);
+            }
+        }
+        return userList;
     }
 }

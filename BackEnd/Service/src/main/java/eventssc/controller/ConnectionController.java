@@ -89,23 +89,28 @@ public class ConnectionController {
     }
 
     @RequestMapping("/markInterest")
-    public String markInterest(String interestStr) throws DaoException{
+    public String markInterest(String interestStr) throws DaoException {
         return String.valueOf(eventBean.markInterest(interestStr));
     }
 
     @RequestMapping("/getUser")
-    public String getUserName(String userIdStr) throws DaoException{
+    public String getUserName(String userIdStr) throws DaoException {
         return UserManager.getFirstNameFromId(userIdStr, amazonRDS);
     }
 
     @RequestMapping("/getInterestedEvents")
-    public String getInterestedEvents(String userIdStr) throws DaoException{
+    public String getInterestedEvents(String userIdStr) throws DaoException {
         return eventBean.getInterestedEvents(userIdStr);
     }
 
     @RequestMapping("/getCreatedEvents")
-    public String getCreatedEvents(String userIdStr) throws DaoException{
+    public String getCreatedEvents(String userIdStr) throws DaoException {
         return eventBean.getCreatedEvents(userIdStr);
+    }
+
+    @RequestMapping("/getInterestedUsers")
+    public String getInterestedUsers(String eventIdStr) throws DaoException {
+        return eventBean.getUsersInterested(eventIdStr);
     }
 
     /*
@@ -113,50 +118,48 @@ public class ConnectionController {
     Returns LOGINID from LOGIN table if credentials are correct. Else returns -1.
      */
     @RequestMapping("/login")
-    public int getLogin(String username, String password) throws Exception{
+    public int getLogin(String username, String password) throws Exception {
         Connection connection = null;
         ResultSet resultSet;
 
-        try{
+        try {
             String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'" + "AND PASSWORD = \'" + password + "\'";
 
             connection = amazonRDS.getConnection();
             Statement statement = connection.createStatement();
 
             resultSet = statement.executeQuery(selectLoginID);
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + Integer.parseInt(resultSet.getString("LOGINID"));
                 resultSet = statement.executeQuery(selectUserID);
 
-                if(resultSet.next()){
+                if (resultSet.next()) {
                     return Integer.parseInt(resultSet.getString("USERID"));
                 }
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex.getMessage());
-            if(connection!=null) connection.rollback();
-        }
-        finally {
-            if(connection!=null) connection.close();
+            if (connection != null) connection.rollback();
+        } finally {
+            if (connection != null) connection.close();
         }
         return -1;
     }
 
     @RequestMapping("/registeruser")
-    public int addUser(String user) throws Exception{
+    public int addUser(String user) throws Exception {
         Connection connection = null;
         ResultSet resultSet;
 
-        try{
+        try {
             JSONParser parser = new JSONParser();
             JSONObject userJson = (JSONObject) parser.parse(user);
 
-            String username = (String)userJson.get("username");
-            String password = (String)userJson.get("password");
-            String firstname = (String)userJson.get("firstname");
-            String lastname = (String)userJson.get("lastname");
-            String phone = (String)userJson.get("phone");
+            String username = (String) userJson.get("username");
+            String password = (String) userJson.get("password");
+            String firstname = (String) userJson.get("firstname");
+            String lastname = (String) userJson.get("lastname");
+            String phone = (String) userJson.get("phone");
 
 
             String selectLoginID = "SELECT LOGINID FROM LOGIN WHERE USERNAME = \'" + username + "\'";
@@ -165,15 +168,14 @@ public class ConnectionController {
             Statement statement = connection.createStatement();
 
             resultSet = statement.executeQuery(selectLoginID);
-            if(resultSet.next()){
+            if (resultSet.next()) {
                 return -1;
-            }
-            else{
+            } else {
                 String insertUscLogin = "INSERT INTO LOGIN (USERNAME, PASSWORD) VALUES( \'" + username + "\' , \'" + password + "\')";
                 statement.executeUpdate(insertUscLogin);
 
                 resultSet = statement.executeQuery(selectLoginID);
-                if (resultSet.next()){
+                if (resultSet.next()) {
                     int uscLoginID = Integer.parseInt(resultSet.getString("LOGINID"));
 
                     StringBuilder insertUserDetail = new StringBuilder();
@@ -191,22 +193,21 @@ public class ConnectionController {
                     String selectUserID = "SELECT USERID FROM USERDETAILS WHERE LOGINID = " + uscLoginID;
                     resultSet = statement.executeQuery(selectUserID);
 
-                    if(resultSet.next()){
+                    if (resultSet.next()) {
                         connection.commit();
                         return Integer.parseInt(resultSet.getString("USERID"));
                     }
                 }
             }
-        }
-        catch(Exception ex){
+        } catch (Exception ex) {
             logger.error(ex.getMessage());
-            if(connection!=null) connection.rollback();
-        }
-        finally {
-            if(connection!=null) connection.close();
+            if (connection != null) connection.rollback();
+        } finally {
+            if (connection != null) connection.close();
         }
         return -1;
     }
+
     @RequestMapping("/geofence")
     public String getGeoFencingDetails() throws Exception {
         Connection connection = null;

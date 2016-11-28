@@ -44,7 +44,7 @@ public class EventManager {
     }
 
     public boolean createEvent(String jsonStr) throws DaoException {
-        return eventDao.createEvent(jsonStr);
+        return eventDao.createEventWithLatLong(jsonStr);
     }
 
     public double[] getLocationById(int locationId) throws DaoException {
@@ -61,6 +61,10 @@ public class EventManager {
 
     public List<Event> getCreatedEvents(int userId) throws DaoException {
         return eventDao.getCreatedEvents(userId);
+    }
+
+    public List<String> getUsersInterested(int eventId) throws DaoException {
+        return eventDao.getUsersInterested(eventId);
     }
 
 }

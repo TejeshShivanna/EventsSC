@@ -83,6 +83,14 @@ public class EventBean {
         return "[]";
     }
 
+    public String getUsersInterested(String eventIdStr) throws DaoException{
+        if(eventIdStr != null) {
+            return String.join(",", eventMgr.getUsersInterested(Integer.parseInt(eventIdStr)));
+        }
+        return "[]";
+
+    }
+
     public boolean markInterest(String interestStr) throws DaoException {
         return eventMgr.markInterest(interestStr);
     }
