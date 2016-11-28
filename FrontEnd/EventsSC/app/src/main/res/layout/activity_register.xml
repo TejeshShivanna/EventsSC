@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:fillViewport="true">
@@ -50,7 +51,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:layout_marginBottom="20dip"/>
+                android:layout_marginBottom="20dip"
+                android:inputType="textCapWords"
+                android:singleLine="true"
+                android:hint="Enter Given Name" />
             <!-- Last Name Label -->
             <TextView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -60,17 +64,23 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:layout_marginBottom="20dip"/>
+                android:layout_marginBottom="20dip"
+                android:inputType="textCapWords"
+                android:hint="Enter Family Name"
+                android:singleLine="true" />
             <!-- Phone# Label -->
             <TextView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:textColor="#372c24"
-                android:text="Phone #"/>
+                android:text="Phone #" />
             <EditText android:id="@+id/txt_phone"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:layout_marginBottom="20dip"/>
+                android:layout_marginBottom="20dip"
+                android:inputType="phone"
+                android:hint="Enter Phone Number"
+                android:singleLine="true" />
             <!--  Email Label -->
             <TextView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -80,7 +90,10 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:layout_marginBottom="20dip"/>
+                android:layout_marginBottom="20dip"
+                android:inputType="textEmailAddress"
+                android:hint="Enter USC Email Address"
+                android:singleLine="true" />
             <!-- Password Label -->
             <TextView android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
@@ -90,7 +103,9 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dip"
-                android:inputType="textPassword"/>
+                android:inputType="textPassword"
+                android:hint="Enter Password"
+                android:singleLine="true" />
             <!-- Register Button -->
             <Button android:id="@+id/btnRegister"
                 android:layout_width="fill_parent"
