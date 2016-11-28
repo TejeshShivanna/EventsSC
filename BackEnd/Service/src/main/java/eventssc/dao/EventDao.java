@@ -338,13 +338,14 @@ public class EventDao {
 
             String address = jsonObj.optString("address", "");
             int locationId = -1;
+            Location location = new Location();
             if (address.equals("")) {
                 Double latitude = jsonObj.optDouble("latitude");
                 Double longitude = jsonObj.optDouble("longitude");
-                Location location = lm.setLocationAddress(latitude, longitude);
+                location = lm.setLocationAddress(latitude, longitude);
                 locationId = lm.getLocationId(location, true);
             } else {
-                Location location = lm.setLocationCoOrdinates(address);
+                location = lm.setLocationCoOrdinates(address);
                 locationId = lm.getLocationId(location, true);
             }
 
@@ -355,7 +356,7 @@ public class EventDao {
             statement.setTime(5, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("starttime")).getTime()));
             statement.setTime(6, new java.sql.Time(DateUtility.getTimeFromApp(jsonObj.optString("endtime")).getTime()));
             statement.setInt(7, jsonObj.optInt("creatorId"));
-            statement.setString(8, address);
+            statement.setString(8, location.getLocationName());
 
             if (statement.executeUpdate() != 0) {
                 con.commit();
