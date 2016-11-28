@@ -45,11 +45,30 @@ public class EventBean {
         return false;
     }
 
-    public String getInterestedEvents(String userIdStr) throws DaoException{
+    public String getInterestedEvents(String userIdStr) throws DaoException {
         List<Event> events = new ArrayList<>();
         List<Event> updatedEvents = new ArrayList<>();
         if (userIdStr != null) {
             events = eventMgr.getInterestedEvents(Integer.parseInt(userIdStr));
+            for (Event event : events) {
+                double location[] = eventMgr.getLocationById(event.getLocationID());
+                event.setLatitude(location[0]);
+                event.setLongitude(location[1]);
+                updatedEvents.add(event);
+            }
+            if (updatedEvents != null) {
+                Gson gson = new Gson();
+                return gson.toJson(updatedEvents);
+            }
+        }
+        return "[]";
+    }
+
+    public String getCreatedEvents(String userIdStr) throws DaoException {
+        List<Event> events = new ArrayList<>();
+        List<Event> updatedEvents = new ArrayList<>();
+        if (userIdStr != null) {
+            events = eventMgr.getCreatedEvents(Integer.parseInt(userIdStr));
             for (Event event : events) {
                 double location[] = eventMgr.getLocationById(event.getLocationID());
                 event.setLatitude(location[0]);
@@ -74,4 +93,5 @@ public class EventBean {
         }
         return eventMgr.createEvent(jsonStr);
     }
+
 }

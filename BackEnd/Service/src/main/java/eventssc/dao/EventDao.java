@@ -30,7 +30,9 @@ public class EventDao {
     private static final String SQL_INSERT_EVENT = "INSERT INTO Event(eventname, locationid, eventdescription, eventdate, starttime, endtime, creator, address) VALUES (?,?,?,?,?,?,?,?)";
     private static final String SQL_INSERT_RSVP = "INSERT INTO Rsvp(userid, eventid, status) VALUES (?,?,?)";
 
-    private static final String SQL_GET_INTERESTED_EVENTS = "SELECT * FROM Event e INNER JOIN Rsvp r ON e.eventid = r.eventid WHERE status=true AND userid = ?";
+    private static final String SQL_GET_INTERESTED_EVENTS = "SELECT * FROM Event e INNER JOIN Rsvp r ON e.eventid = r.eventid WHERE r.status=true AND r.userid = ? AND e.eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date)";
+    private static final String SQL_GET_CREATED_EVENTS = "SELECT * FROM Event WHERE creator = ? AND eventdate >= ((SELECT NOW() AT TIME ZONE 'PST') ::timestamp::date)";
+
 
     private AmazonRDS amazonRDS;
 
@@ -88,6 +90,32 @@ public class EventDao {
         }
         return eventList;
     }
+
+    public List<Event> getCreatedEvents(int userId) throws DaoException {
+        Connection con = null;
+        PreparedStatement statement = null;
+        ResultSet result = null;
+
+        List<Event> eventList = new ArrayList<Event>();
+
+        try {
+            con = amazonRDS.getConnection();
+            statement = con.prepareStatement(SQL_GET_CREATED_EVENTS);
+            statement.setLong(1, userId);
+            result = statement.executeQuery();
+
+            while (result.next()) {
+                eventList.add(createEventSet(result));
+            }
+        } catch (Exception e) {
+            throw new DaoException(e);
+        } finally {
+            amazonRDS.close(result, statement);
+        }
+        return eventList;
+    }
+
+
 
     private static Event createEventSet(ResultSet result) throws DaoException {
 

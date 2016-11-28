@@ -58,4 +58,9 @@ public class EventManager {
     public List<Event> getInterestedEvents(int userId) throws DaoException {
         return eventDao.getInterestedEvents(userId);
     }
+
+    public List<Event> getCreatedEvents(int userId) throws DaoException {
+        return eventDao.getCreatedEvents(userId);
+    }
+
 }

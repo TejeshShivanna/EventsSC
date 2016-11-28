@@ -103,6 +103,11 @@ public class ConnectionController {
         return eventBean.getInterestedEvents(userIdStr);
     }
 
+    @RequestMapping("/getCreatedEvents")
+    public String getCreatedEvents(String userIdStr) throws DaoException{
+        return eventBean.getCreatedEvents(userIdStr);
+    }
+
     /*
     Input: UserName and Password
     Returns LOGINID from LOGIN table if credentials are correct. Else returns -1.
