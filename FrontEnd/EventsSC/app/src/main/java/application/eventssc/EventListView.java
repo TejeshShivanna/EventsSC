@@ -51,7 +51,6 @@ public class EventListView extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Object item = listview.getItemAtPosition(position);
-                System.out.print(position);
                 Toast.makeText(getApplicationContext(), item.toString(), Toast.LENGTH_SHORT).show();
                 try {
                     JSONObject obj = (JSONObject) jsonArr.get(position);

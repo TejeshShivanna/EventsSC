@@ -132,6 +132,38 @@ public class ConnectionController {
         }
     }
 
+    @RequestMapping("/isInterested")
+    public boolean isInterested(String interestStr) throws Exception {
+        Connection connection = null;
+        ResultSet resultSet;
+
+        try {
+            JSONParser parser = new JSONParser();
+            JSONObject interestedJson = (JSONObject) parser.parse(interestStr);
+
+            int userId = Integer.parseInt(interestedJson.get("userId").toString());
+            int eventId = Integer.parseInt(interestedJson.get("eventId").toString());
+
+            String selectRSVPSql = "SELECT STATUS FROM RSVP WHERE USERID = " + userId + "AND EVENTID = " + eventId;
+
+            connection = amazonRDS.getConnection();
+            Statement statement = connection.createStatement();
+
+            resultSet = statement.executeQuery(selectRSVPSql);
+            if (resultSet.next()) {
+                return (resultSet.getString("status").toString()).equals("f")?false:true;
+            }
+        } catch (Exception ex) {
+            logger.error(ex.getMessage());
+            if (connection != null)
+                connection.rollback();
+        } finally {
+            if (connection != null)
+                connection.close();
+        }
+        return false;
+    }
+
     @RequestMapping("/getUser")
     public String getUserName(String userIdStr) throws DaoException {
         return UserManager.getFirstNameFromId(userIdStr, amazonRDS);
