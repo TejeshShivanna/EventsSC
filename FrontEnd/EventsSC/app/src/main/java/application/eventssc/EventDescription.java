@@ -1,31 +1,19 @@
 package application.eventssc;
 
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
 import android.os.AsyncTask;
-import android.os.Build;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.apache.http.HttpEntity;
@@ -33,7 +21,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -47,9 +34,9 @@ import java.util.Date;
 
 public class EventDescription extends FragmentActivity implements OnMapReadyCallback {
 
-    private GoogleMap mMap;
     static String eventsJsonStr = "";
-    //private String setInterestUrl = "http://10.0.2.2:8080/markInterest?interestStr=";
+    private static Boolean interested = false;
+    private GoogleMap mMap;
     private String setInterestUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/markInterest?interestStr=";
     private int userId;
     private int eventId = -1;
@@ -97,7 +84,8 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        FloatingActionButton myFab = (FloatingActionButton) findViewById(R.id.fab);
+        final FloatingActionButton myFab = (FloatingActionButton) findViewById(R.id.fab);
+
         myFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 String jsonObjString = "";
@@ -107,6 +95,14 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
                     obj.put("eventId", eventId);
                     obj.put("status", true);
                     jsonObjString = obj.toString();
+
+                    if (!interested) {
+                        myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.interested));
+                        interested = true;
+                    } else {
+                        myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.not_interested));
+                        interested = false;
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -127,7 +123,7 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        try{
+        try {
             JSONObject eventObj = new JSONObject(eventsJsonStr);
             double latitude = eventObj.getDouble("latitude");
             double longitude = eventObj.getDouble("longitude");
@@ -138,10 +134,6 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
 
@@ -157,7 +149,7 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
         protected String doInBackground(String... params) {
             DefaultHttpClient httpclient = new DefaultHttpClient(new BasicHttpParams());
             HttpGet request = new HttpGet(setInterestUrl);
-            InputStream resultStream = null;
+            InputStream resultStream;
             String result = null;
             try {
                 HttpResponse response = httpclient.execute(request);
@@ -166,7 +158,7 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
                 BufferedReader reader = new BufferedReader(new InputStreamReader(resultStream, "UTF-8"), 8);
                 StringBuilder sb = new StringBuilder();
 
-                String line = null;
+                String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line + "\n");
                 }
@@ -182,19 +174,18 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
 
         @Override
         protected void onPostExecute(String result) {
+            Toast toast;
             if (result != null) {
-                Toast toast = Toast.makeText(getApplicationContext(), "Marked Interested", Toast.LENGTH_SHORT);
-                toast.show();
+                if (interested) {
+                    toast = Toast.makeText(getApplicationContext(), "Event marked as interested", Toast.LENGTH_SHORT);
+                } else {
+                    toast = Toast.makeText(getApplicationContext(), "Event removed from interested", Toast.LENGTH_SHORT);
+                }
+
             } else {
-                Toast toast = Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_SHORT);
-                toast.show();
+                toast = Toast.makeText(getApplicationContext(), "Failed", Toast.LENGTH_SHORT);
             }
-            Intent resultsIntent = new Intent();
-            resultsIntent.setClass(getApplicationContext(), MainActivity.class);
-            resultsIntent.putExtra("UserId", userId);
-            startActivity(resultsIntent);
+            if (toast != null) toast.show();
         }
     }
-
-
 }
