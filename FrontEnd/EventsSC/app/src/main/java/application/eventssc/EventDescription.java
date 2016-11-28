@@ -37,7 +37,10 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
     static String eventsJsonStr = "";
     private static Boolean interested = false;
     private GoogleMap mMap;
-    private String setInterestUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/markInterest?interestStr=";
+    //    private String setInterestUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/markInterest?interestStr=";
+    private String setInterestUrlDefault = "http://eventssc.us-west-2.elasticbeanstalk.com/eventInterested?interestStr=";
+    private String setInterestUrl;
+
     private int userId;
     private int eventId = -1;
     private String eventName = "";
@@ -46,7 +49,7 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_event_description);
-        userId = getIntent().getIntExtra("UserId", -1);
+        userId = MapsActivity.userId;
 
         eventsJsonStr = getIntent().getStringExtra("eventObject");
         try {
@@ -88,35 +91,34 @@ public class EventDescription extends FragmentActivity implements OnMapReadyCall
 
         myFab.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                String jsonObjString = "";
+                String jsonObjString;
                 try {
                     JSONObject obj = new JSONObject();
                     obj.put("userId", userId);
                     obj.put("eventId", eventId);
-                    obj.put("status", true);
-                    jsonObjString = obj.toString();
 
                     if (!interested) {
                         myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.interested));
                         interested = true;
+                        obj.put("status", true);
                     } else {
                         myFab.setImageDrawable(ContextCompat.getDrawable(getApplicationContext(), R.mipmap.not_interested));
                         interested = false;
+                        obj.put("status", false);
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                    jsonObjString = obj.toString();
 
-                try {
                     String encodedString = URLEncoder.encode(jsonObjString, "UTF-8");
-                    setInterestUrl += encodedString;
+                    //setInterestUrl += encodedString;
+                    setInterestUrl = setInterestUrlDefault + encodedString;
+
                     new JsonAsyncTask().execute();
+
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
-
     }
 
     @Override

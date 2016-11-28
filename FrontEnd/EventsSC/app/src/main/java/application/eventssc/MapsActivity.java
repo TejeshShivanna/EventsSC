@@ -1,7 +1,5 @@
 package application.eventssc;
 
-
-import android.*;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,17 +7,14 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.AsyncTask;
 import android.os.Build;
-import android.support.annotation.NonNull;
+import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.Toast;
@@ -37,7 +32,6 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -61,43 +55,29 @@ import java.util.Map;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener,GoogleMap.OnInfoWindowClickListener,SeekBar.OnSeekBarChangeListener, AdapterView.OnItemClickListener,ResultCallback<Status> {
+        LocationListener, GoogleMap.OnInfoWindowClickListener, SeekBar.OnSeekBarChangeListener, AdapterView.OnItemClickListener, ResultCallback<Status> {
 
-    private GoogleMap mMap;
+    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
+    protected static final String TAG = "GeoFenceActivity";
+    static String eventsJsonStr = "";
+    protected ArrayList<Geofence> mGeofenceList;
     GoogleApiClient mGoogleApiClient;
     Location mLastLocation;
     Marker mCurrLocationMarker;
     LocationRequest mLocationRequest;
-    private ListView mDrawerList;
-    private ArrayAdapter<String> mAdapter;
-    static String eventsJsonStr = "";
-    private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
-    private String allEventsUrl="http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
-    private String jsonString = "";
     SeekBar seekBar;
     ArrayList<MarkerOptions> allMarkers = new ArrayList<MarkerOptions>();
-
-
-    protected static final String TAG = "GeoFenceActivity";
-
-
-    protected ArrayList<Geofence> mGeofenceList;
-
+    private GoogleMap mMap;
+    private ListView mDrawerList;
+    private ArrayAdapter<String> mAdapter;
+    private String webServerUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/range?latLong=";
+    private String allEventsUrl = "http://eventssc.us-west-2.elasticbeanstalk.com/all_events";
+    private String jsonString = "";
     private boolean mGeofencesAdded;
-
     private PendingIntent mGeofencePendingIntent;
-
     private SharedPreferences mSharedPreferences;
-
     private GeoFenceConstants geoFenceConstants;
-    int userId;
-
-
-
-
-
-
-
+    public static int userId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -107,10 +87,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             checkLocationPermission();
         }
         userId = getIntent().getIntExtra("UserId", -1);
-        seekBar = (SeekBar)findViewById(R.id.seekBarRange);
+        seekBar = (SeekBar) findViewById(R.id.seekBarRange);
         seekBar.setProgress(2);
         seekBar.setOnSeekBarChangeListener(this);
-        mDrawerList = (ListView)findViewById(R.id.left_drawer);
+        mDrawerList = (ListView) findViewById(R.id.left_drawer);
         addDrawerItems();
         mDrawerList.setOnItemClickListener(this);
 
@@ -141,11 +121,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void addDrawerItems() {
-        String[] osArray = { "My Profile", "Events Interested In", "Create Event", "Event created by You"};
+        String[] osArray = {"My Profile", "Events Interested In", "Create Event", "Event created by You"};
         mAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, osArray);
         mDrawerList.setAdapter(mAdapter);
     }
-
 
     public void addGeofences() {
         populateGeofenceList();
@@ -155,20 +134,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         try {
-
-            LocationServices.GeofencingApi.addGeofences(
-                    mGoogleApiClient,
-                    // The GeofenceRequest object.
-                    getGeofencingRequest(),
-                    // A pending intent that that is reused when calling removeGeofences(). This
-                    // pending intent is used to generate an intent when a matched geofence
-                    // transition is observed.
-                    getGeofencePendingIntent()
-            ).setResultCallback(this); // Result processed in onResult().
+            if (getGeofencingRequest() != null) {
+                LocationServices.GeofencingApi.addGeofences(
+                        mGoogleApiClient,
+                        getGeofencingRequest(),
+                        getGeofencePendingIntent()
+                ).setResultCallback(this); // Result processed in onResult().
+            }
         } catch (SecurityException securityException) {
         }
     }
-
 
     private PendingIntent getGeofencePendingIntent() {
         // Reuse the PendingIntent if we already have it.
@@ -212,20 +187,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-
     private GeofencingRequest getGeofencingRequest() {
-        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        try {
+            GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
 
-        // The INITIAL_TRIGGER_ENTER flag indicates that geofencing service should trigger a
-        // GEOFENCE_TRANSITION_ENTER notification when the geofence is added and if the device
-        // is already inside that geofence.
-        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
+            builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER);
 
-        // Add the geofences to be monitored by geofencing service.
-        builder.addGeofences(mGeofenceList);
+            builder.addGeofences(mGeofenceList);
 
-        // Return a GeofencingRequest.
-        return builder.build();
+            return builder.build();
+        } catch (Exception ex) {
+        }
+        return null;
     }
 
     /**
@@ -251,8 +224,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mMap.setMyLocationEnabled(true);
 
             }
-        }
-        else {
+        } else {
             buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
@@ -298,10 +270,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    public String submitForm(double lat,double lon, double range) {
+    public String submitForm(double lat, double lon, double range) {
         try {
 
-            JsonAsyncTask asyncTask =  new JsonAsyncTask(lat,lon,range);
+            JsonAsyncTask asyncTask = new JsonAsyncTask(lat, lon, range);
             String result = asyncTask.execute().get();
             return result;
 
@@ -314,50 +286,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onLocationChanged(Location location) {
         mLastLocation = location;
-        double range = ((double)seekBar.getProgress())/10;
+        double range = ((double) seekBar.getProgress()) / 10;
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker.remove();
         }
         mMap.clear();
         addGeofences();
-        if(!allMarkers.isEmpty())
-        {
-            for (int i =0;i<allMarkers.size();i++){
+        if (!allMarkers.isEmpty()) {
+            for (int i = 0; i < allMarkers.size(); i++) {
                 allMarkers.remove(i);
             }
         }
 
 
-
-        eventsJsonStr = submitForm(location.getLatitude(),location.getLongitude(),range);
+        eventsJsonStr = submitForm(location.getLatitude(), location.getLongitude(), range);
         //Place current location marker
         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
         markerOptions.title("Current Position");
-        try{
+        try {
             //markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
             //mCurrLocationMarker = mMap.addMarker(markerOptions);
 
             JSONArray jsonArr = new JSONArray(eventsJsonStr);
-            for(int i = 0; i < jsonArr.length(); i++){
+            for (int i = 0; i < jsonArr.length(); i++) {
                 JSONObject obj = (JSONObject) jsonArr.get(i);
                 int flag = 0;
-                for(int j = 0;j<i;j++){
+                for (int j = 0; j < i; j++) {
                     JSONObject temp = (JSONObject) jsonArr.get(j);
-                    if(temp.getDouble("latitude") == obj.getDouble("latitude") && temp.getDouble("longitude") == obj.getDouble("longitude")){
-                        flag=1;
+                    if (temp.getDouble("latitude") == obj.getDouble("latitude") && temp.getDouble("longitude") == obj.getDouble("longitude")) {
+                        flag = 1;
                         break;
                     }
                 }
                 LatLng sydney;
-                if(flag == 0) {
+                if (flag == 0) {
                     sydney = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
-                }
-                else {
-                    obj.put("latitude",obj.getDouble("latitude")+0.00005);
-                    obj.put("longitude",obj.getDouble("longitude")+0.00005);
-                    jsonArr.put(i,(Object)obj);
+                } else {
+                    obj.put("latitude", obj.getDouble("latitude") + 0.00005);
+                    obj.put("longitude", obj.getDouble("longitude") + 0.00005);
+                    jsonArr.put(i, (Object) obj);
                     sydney = new LatLng(obj.getDouble("latitude"), obj.getDouble("longitude"));
                 }
                 MarkerOptions mark = new MarkerOptions().position(sydney).title(obj.getString("eventName"));
@@ -382,14 +351,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onInfoWindowClick(Marker marker) {
         String title = marker.getTitle();
-        try{
+        try {
             //markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN));
             //mCurrLocationMarker = mMap.addMarker(markerOptions);
 
             JSONArray jsonArr = new JSONArray(eventsJsonStr);
-            for(int i = 0; i < jsonArr.length(); i++){
+            for (int i = 0; i < jsonArr.length(); i++) {
                 JSONObject obj = (JSONObject) jsonArr.get(i);
-                if(obj.getString("eventName").equals(title)){
+                if (obj.getString("eventName").equals(title)) {
                     Toast.makeText(this, obj.getString("eventName"), Toast.LENGTH_LONG).show();
                     Intent resultsIntent = new Intent();
                     resultsIntent.setClass(getApplicationContext(), EventDescription.class);
@@ -405,14 +374,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
 
     }
 
-    public static final int MY_PERMISSIONS_REQUEST_LOCATION = 99;
-    public boolean checkLocationPermission(){
+    public boolean checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this,
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -488,32 +455,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        Toast.makeText(getApplicationContext(),"Range: "+(double)(seekBar.getProgress())/10+" Mile(s)", Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), "Range: " + (double) (seekBar.getProgress()) / 10 + " Mile(s)", Toast.LENGTH_SHORT).show();
         onLocationChanged(mLastLocation);
 
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        if(position==0){
+        if (position == 0) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), Profile.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
-        }
-        else if(position==1){
+        } else if (position == 1) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), InterestedEvents.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
-        }
-        else if(position==2){
+        } else if (position == 2) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), CreateEvent.class);
             resultsIntent.putExtra("UserId", userId);
             startActivity(resultsIntent);
-        }
-        else if(position==3){
+        } else if (position == 3) {
             Intent resultsIntent = new Intent();
             resultsIntent.setClass(getApplicationContext(), EventsByYou.class);
             resultsIntent.putExtra("UserId", userId);
@@ -538,12 +502,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         }
     }
+
     private class JsonAsyncTask extends AsyncTask<String, String, String> {
         double latitude;
         double longitude;
         double range;
 
-        public JsonAsyncTask(double latitude,double longitude, double range){
+        public JsonAsyncTask(double latitude, double longitude, double range) {
             this.latitude = latitude;
             this.longitude = longitude;
             this.range = range;
@@ -563,7 +528,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 jsonObject.put("latitude", latitude);
                 jsonObject.put("longitude", longitude);
-                jsonObject.put("range",range);
+                jsonObject.put("range", range);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
